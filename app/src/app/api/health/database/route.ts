@@ -2,13 +2,15 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { successResponse, errorResponse } from '@/lib/response';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * GET /api/health/database
  * Vérifie l'état de la base de données et des tables
  */
 export async function GET(request: NextRequest) {
   try {
-    const checks: any = {
+    const checks: Record<string, any> = {
       connected: false,
       tables: {},
       migrations: {

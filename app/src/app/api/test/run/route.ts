@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server';
 import { successResponse, errorResponse, unauthorizedResponse } from '@/lib/response';
 import { prisma } from '@/lib/prisma';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * Vérifie l'authentification de test
  */
@@ -237,7 +239,12 @@ async function runAllTests(data?: any) {
     { name: 'notion', fn: testNotion },
   ];
 
-  const results = [];
+  const results: Array<{
+    name: string;
+    passed: boolean;
+    details?: any;
+    error?: string;
+  }> = [];
 
   for (const test of tests) {
     try {

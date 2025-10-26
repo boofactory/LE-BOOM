@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server';
 import { successResponse, errorResponse, unauthorizedResponse } from '@/lib/response';
 import crypto from 'crypto';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * POST /api/test/auth
  * Authentifie avec l'API key de test et retourne un token
