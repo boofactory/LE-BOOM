@@ -53,6 +53,19 @@ export const authOptions: NextAuthOptions = {
     signIn: '/login',
   },
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      // Toujours utiliser des chemins relatifs pour éviter les problèmes de domaine
+      // Si l'URL commence par le baseUrl, extraire seulement le chemin
+      if (url.startsWith(baseUrl)) {
+        return url.slice(baseUrl.length);
+      }
+      // Si c'est déjà un chemin relatif, le retourner tel quel
+      if (url.startsWith('/')) {
+        return url;
+      }
+      // Par défaut, rediriger vers le dashboard
+      return '/dashboard';
+    },
     async jwt({ token, user }) {
       if (user) {
         token.role = (user as any).role;
