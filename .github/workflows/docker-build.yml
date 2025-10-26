@@ -62,11 +62,16 @@ jobs:
 
       - name: Trigger Portainer Webhook (Production)
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        continue-on-error: true
         run: |
-          curl -X POST "${{ secrets.PORTAINER_WEBHOOK_URL }}" \
-            -H "X-API-Key: ${{ secrets.PORTAINER_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            -d '{"RepositoryReferenceName":"refs/heads/main"}'
+          if [ -n "${{ secrets.PORTAINER_WEBHOOK_URL }}" ]; then
+            curl -X POST "${{ secrets.PORTAINER_WEBHOOK_URL }}" \
+              -H "X-API-Key: ${{ secrets.PORTAINER_API_KEY }}" \
+              -H "Content-Type: application/json" \
+              -d '{"RepositoryReferenceName":"refs/heads/main"}'
+          else
+            echo "PORTAINER_WEBHOOK_URL not configured, skipping webhook trigger"
+          fi
 
       - name: Create Release Notes
         if: startsWith(github.ref, 'refs/tags/v')
