@@ -1,5 +1,5 @@
 # ============================================
-# Stage 1: Dependencies
+# Stage 1: Dependencies (Production only)
 # ============================================
 FROM node:20-alpine AS deps
 
@@ -11,7 +11,7 @@ WORKDIR /app
 # Copy package files
 COPY package.json ./
 
-# Install dependencies
+# Install production dependencies only
 RUN npm install --omit=dev && \
     npm cache clean --force
 
@@ -22,8 +22,12 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy dependencies from deps stage
-COPY --from=deps /app/node_modules ./node_modules
+# Copy package files
+COPY package.json ./
+
+# Install ALL dependencies (including devDependencies for build)
+RUN npm install && \
+    npm cache clean --force
 
 # Copy source code
 COPY . .
@@ -32,15 +36,15 @@ COPY . .
 RUN npx prisma generate
 
 # Build Next.js application
-ENV NEXT_TELEMETRY_DISABLED 1
-ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
 
 # Build with placeholder env vars (will be overridden at runtime)
-ENV DATABASE_URL "postgresql://placeholder:placeholder@placeholder:5432/placeholder"
-ENV REDIS_URL "redis://:placeholder@placeholder:6379"
-ENV NEXTAUTH_URL "http://placeholder"
-ENV NEXTAUTH_SECRET "placeholder-secret-for-build-only"
-ENV SKIP_ENV_VALIDATION 1
+ENV DATABASE_URL="postgresql://placeholder:placeholder@placeholder:5432/placeholder"
+ENV REDIS_URL="redis://:placeholder@placeholder:6379"
+ENV NEXTAUTH_URL="http://placeholder"
+ENV NEXTAUTH_SECRET="placeholder-secret-for-build-only"
+ENV SKIP_ENV_VALIDATION=1
 
 RUN npm run build
 
@@ -59,8 +63,8 @@ RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
 # Set environment
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Copy necessary files from builder
 COPY --from=builder /app/next.config.js ./
@@ -87,8 +91,8 @@ USER nextjs
 EXPOSE 3000
 
 # Environment variables
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
