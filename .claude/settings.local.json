@@ -20,7 +20,9 @@
       "Bash(cat:*)",
       "Bash(node -p:*)",
       "Bash(npm install)",
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": []

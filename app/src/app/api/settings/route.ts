@@ -60,16 +60,33 @@ export async function POST(request: NextRequest) {
       return errorResponse('Missing required fields: key and value', 400);
     }
 
+    console.log('[SETTINGS] Upserting setting:', { key, encrypted, hasValue: !!value });
+
     const setting = await prisma.setting.upsert({
       where: { key },
       update: { value, description, encrypted: encrypted || false },
       create: { key, value, description, encrypted: encrypted || false },
     });
 
+    console.log('[SETTINGS] Setting saved successfully:', key);
     return successResponse({ setting });
-  } catch (error) {
-    console.error('Error upserting setting:', error);
-    return errorResponse('Failed to save setting', 500);
+  } catch (error: any) {
+    console.error('[SETTINGS] Error upserting setting:', {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+      stack: error.stack,
+    });
+
+    // Erreur spécifique si la table n'existe pas
+    if (error.code === 'P2021') {
+      return errorResponse(
+        'La table settings n\'existe pas. Veuillez exécuter les migrations Prisma.',
+        500
+      );
+    }
+
+    return errorResponse(`Failed to save setting: ${error.message}`, 500);
   }
 }
 
