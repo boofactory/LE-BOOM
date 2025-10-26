@@ -22,6 +22,11 @@ export async function GET(request: NextRequest) {
     let notionToken = process.env.NOTION_API_TOKEN;
     let notionDatabaseId = process.env.NOTION_DATABASE_ID;
 
+    console.log('[NOTION-EVENTS] Env vars:', {
+      hasEnvToken: !!notionToken,
+      hasEnvDb: !!notionDatabaseId,
+    });
+
     // Si pas dans env vars, chercher dans settings
     if (!notionToken || !notionDatabaseId) {
       const tokenSetting = await prisma.setting.findUnique({
@@ -31,18 +36,33 @@ export async function GET(request: NextRequest) {
         where: { key: 'NOTION_DATABASE_ID' },
       });
 
+      console.log('[NOTION-EVENTS] Settings:', {
+        hasTokenSetting: !!tokenSetting,
+        tokenLength: tokenSetting?.value?.length,
+        hasDbSetting: !!dbSetting,
+        dbId: dbSetting?.value,
+      });
+
       notionToken = tokenSetting?.value || notionToken;
       notionDatabaseId = dbSetting?.value || notionDatabaseId;
     }
 
     if (!notionToken || !notionDatabaseId) {
+      console.error('[NOTION-EVENTS] Missing configuration:', {
+        hasToken: !!notionToken,
+        hasDb: !!notionDatabaseId,
+      });
       return errorResponse(
         'Configuration Notion manquante. Veuillez configurer NOTION_API_TOKEN et NOTION_DATABASE_ID dans les paramètres.',
         503
       );
     }
 
-    console.log('[NOTION-EVENTS] Fetching events from Notion database:', notionDatabaseId);
+    console.log('[NOTION-EVENTS] Fetching from database:', {
+      databaseId: notionDatabaseId,
+      tokenLength: notionToken.length,
+      tokenStart: notionToken.substring(0, 10) + '...',
+    });
 
     const notion = new Client({ auth: notionToken });
 
