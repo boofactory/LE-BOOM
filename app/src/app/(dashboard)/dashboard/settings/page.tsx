@@ -44,11 +44,11 @@ export default function SettingsPage() {
     try {
       const response = await fetch('/api/settings');
       const data = await response.json();
-      if (data.success) {
-        setSettings(data.data.settings);
+      if (data.settings) {
+        setSettings(data.settings);
         // Initialiser editValues avec les valeurs actuelles
         const values: Record<string, string> = {};
-        data.data.settings.forEach((s: Setting) => {
+        data.settings.forEach((s: Setting) => {
           values[s.key] = s.encrypted ? '' : s.value;
         });
         setEditValues(values);
@@ -86,7 +86,11 @@ export default function SettingsPage() {
       });
 
       const data = await response.json();
-      if (data.success) {
+
+      // Vérifier si c'est une erreur ou un succès
+      if (data.error) {
+        setMessage({ type: 'error', text: data.error || 'Erreur lors de la sauvegarde' });
+      } else if (data.setting) {
         setMessage({ type: 'success', text: 'Configuration enregistrée avec succès!' });
         await loadSettings();
 
@@ -95,7 +99,7 @@ export default function SettingsPage() {
           setEditValues(prev => ({ ...prev, [key]: '' }));
         }
       } else {
-        setMessage({ type: 'error', text: data.error || 'Erreur lors de la sauvegarde' });
+        setMessage({ type: 'error', text: 'Réponse inattendue du serveur' });
       }
     } catch (error) {
       setMessage({ type: 'error', text: 'Erreur lors de la sauvegarde' });
