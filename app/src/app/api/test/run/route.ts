@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     // Vérifier l'authentification
     if (!checkTestAuth(request)) {
       console.log('[TEST-RUN] Unauthorized attempt');
-      return unauthorizedResponse('Invalid or missing X-Test-API-Key header');
+      return unauthorizedResponse();
     }
 
     const body = await request.json();

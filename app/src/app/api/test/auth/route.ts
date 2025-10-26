@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
 
     if (apiKey !== validApiKey) {
       console.log('[TEST-AUTH] Invalid API key attempt');
-      return unauthorizedResponse('Invalid API key');
+      return unauthorizedResponse();
     }
 
     // Générer un token simple (pour cette version basique)
