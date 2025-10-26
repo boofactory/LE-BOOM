@@ -249,9 +249,14 @@ async function runAllTests(data?: any) {
   for (const test of tests) {
     try {
       const result = await test.fn(data);
+      // Déterminer si le test a réussi selon le type de résultat
+      const passed =
+        ('success' in result && result.success !== false) ||
+        ('connected' in result && result.connected !== false);
+
       results.push({
         name: test.name,
-        passed: result.success !== false && result.connected !== false,
+        passed,
         details: result,
       });
     } catch (error: any) {
