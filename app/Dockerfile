@@ -99,5 +99,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD curl -f http://localhost:3000/api/health || exit 1
 
 # Start application with migrations
-# Use db push to create/update schema, then deploy migrations to track history
-CMD ["sh", "-c", "npx prisma db push --accept-data-loss --skip-generate && npx prisma migrate deploy || true && node server.js"]
+# First try migrate deploy, if it fails try db push, then start server
+CMD ["sh", "-c", "npx prisma migrate deploy || npx prisma db push --accept-data-loss --skip-generate && node server.js"]
