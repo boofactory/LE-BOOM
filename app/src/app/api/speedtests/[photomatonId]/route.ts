@@ -4,10 +4,11 @@ import { successResponse, errorResponse } from '@/lib/response';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { photomatonId: string } }
+  { params }: { params: Promise<{ photomatonId: string }> }
 ) {
   try {
-    const photomatonId = parseInt(params.photomatonId);
+    const { photomatonId: photomatonIdString } = await params;
+    const photomatonId = parseInt(photomatonIdString);
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '20');
 

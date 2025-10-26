@@ -4,10 +4,11 @@ import { successResponse, errorResponse, notFoundResponse } from '@/lib/response
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
+    const { id: idString } = await params;
+    const id = parseInt(idString);
 
     const event = await prisma.event.findUnique({
       where: { id },
@@ -34,10 +35,11 @@ export async function GET(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
+    const { id: idString } = await params;
+    const id = parseInt(idString);
 
     // Compter les photos avant suppression
     const photosCount = await prisma.photo.count({
