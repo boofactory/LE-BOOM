@@ -44,11 +44,6 @@ services:
       - redis_data:/data
     networks:
       - boom-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
     deploy:
       resources:
         limits:
@@ -69,7 +64,7 @@ services:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
+        condition: service_started
     environment:
       # Node environment
       NODE_ENV: production
