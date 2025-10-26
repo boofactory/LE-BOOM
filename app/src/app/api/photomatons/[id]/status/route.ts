@@ -5,10 +5,11 @@ import { UpdatePhotomatonStatusRequest } from '@/types';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
+    const { id: idString } = await params;
+    const id = parseInt(idString);
     const body: UpdatePhotomatonStatusRequest = await request.json();
 
     const updateData: any = {
