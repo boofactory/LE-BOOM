@@ -14,6 +14,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     { href: '/dashboard/photomatons', label: 'Photomatons', icon: '📸' },
     { href: '/dashboard/stats', label: 'Statistiques', icon: '📊' },
     { href: '/dashboard/history', label: 'Historique', icon: '🕐' },
+    { href: '/dashboard/settings', label: 'Paramètres', icon: '⚙️' },
   ];
 
   return (

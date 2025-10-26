@@ -10,7 +10,17 @@
       "Bash(git branch:*)",
       "Bash(git push:*)",
       "Bash(git remote set-url:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(git remote add:*)",
+      "Bash(https://api.github.com/repos/boofactory/LE-BOOM/actions/runs?per_page=1)",
+      "Bash(https://api.github.com/repos/boofactory/LE-BOOM/actions/runs/18818159787/jobs)",
+      "Bash(unzip:*)",
+      "Bash(\"https://api.github.com/repos/boofactory/LE-BOOM/actions/runs/18818159787/logs\" )",
+      "Read(//c/**)",
+      "Bash(cat:*)",
+      "Bash(node -p:*)",
+      "Bash(npm install)",
+      "Bash(node -e:*)"
     ],
     "deny": [],
     "ask": []

@@ -197,6 +197,22 @@ model VerificationToken {
 }
 
 // ============================================
+// Settings (configuration de l'application)
+// ============================================
+model Setting {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  value       String   @db.Text
+  description String?
+  encrypted   Boolean  @default(false)
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
+// ============================================
 // Audit Logs (traçabilité)
 // ============================================
 model AuditLog {

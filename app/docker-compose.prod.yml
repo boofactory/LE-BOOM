@@ -62,7 +62,7 @@ services:
   # LE BOOM Web Application
   # ================================
   boom-webapp:
-    image: ghcr.io/boofactory/le-boom:latest
+    image: ghcr.io/boofactory/le-boom:main
     container_name: boom-webapp
     restart: unless-stopped
     depends_on:
