@@ -1,0 +1,171 @@
+version: '3.8'
+
+services:
+  # ================================
+  # PostgreSQL Database
+  # ================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: boom-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-boom_v2}
+      POSTGRES_USER: ${POSTGRES_USER:-boom_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - boom-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-boom_admin} -d ${POSTGRES_DB:-boom_v2}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 512M
+
+  # ================================
+  # Redis Cache
+  # ================================
+  redis:
+    image: redis:7-alpine
+    container_name: boom-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    networks:
+      - boom-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # ================================
+  # LE BOOM Web Application
+  # ================================
+  boom-webapp:
+    image: ghcr.io/boofactory/le-boom:latest
+    container_name: boom-webapp
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Node environment
+      NODE_ENV: production
+
+      # Database connection
+      DATABASE_URL: postgresql://${POSTGRES_USER:-boom_admin}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-boom_v2}
+
+      # Redis connection
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+
+      # NextAuth configuration
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+
+      # Auth simple (Phase 1)
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-boo-team}
+      ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH}
+
+      # Infomaniak OAuth (Phase 2 - préparation)
+      INFOMANIAK_CLIENT_ID: ${INFOMANIAK_CLIENT_ID:-}
+      INFOMANIAK_CLIENT_SECRET: ${INFOMANIAK_CLIENT_SECRET:-}
+
+      # Notion API integration
+      NOTION_API_TOKEN: ${NOTION_API_TOKEN}
+      NOTION_DATABASE_ID: ${NOTION_DATABASE_ID}
+
+      # Disable telemetry
+      NEXT_TELEMETRY_DISABLED: 1
+
+      # Application features
+      ENABLE_ANALYTICS: ${ENABLE_ANALYTICS:-false}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+
+      # Tailscale Photomatons
+      PHOTOMATON_1_IP: ${PHOTOMATON_1_IP:-}
+      PHOTOMATON_1_HOSTNAME: ${PHOTOMATON_1_HOSTNAME:-}
+      PHOTOMATON_1_ROUTER_IP: ${PHOTOMATON_1_ROUTER_IP:-}
+      PHOTOMATON_2_IP: ${PHOTOMATON_2_IP:-}
+      PHOTOMATON_2_HOSTNAME: ${PHOTOMATON_2_HOSTNAME:-}
+      PHOTOMATON_2_ROUTER_IP: ${PHOTOMATON_2_ROUTER_IP:-}
+
+    volumes:
+      - uploads_data:/app/public/uploads
+      - logs_data:/app/logs
+    ports:
+      - "3001:3000"
+    networks:
+      - boom-network
+      - nginx-proxy-manager_default
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+# ================================
+# Network Configuration
+# ================================
+networks:
+  boom-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.24.0.0/16
+
+  # External network for nginx-proxy-manager communication
+  nginx-proxy-manager_default:
+    external: true
+
+# ================================
+# Persistent Volumes
+# ================================
+volumes:
+  # PostgreSQL database files
+  postgres_data:
+    driver: local
+
+  # Redis persistence
+  redis_data:
+    driver: local
+
+  # Uploaded files (photos, documents)
+  uploads_data:
+    driver: local
+
+  # Application logs
+  logs_data:
+    driver: local
