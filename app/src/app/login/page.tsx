@@ -26,15 +26,20 @@ function LoginForm() {
         redirect: false,
       });
 
+      console.log('[LOGIN] SignIn result:', result);
+
       if (result?.error) {
+        console.error('[LOGIN] Authentication failed:', result.error);
         setError('Identifiants invalides');
         setLoading(false);
       } else if (result?.ok) {
+        console.log('[LOGIN] Authentication successful, redirecting to:', callbackUrl);
         router.push(callbackUrl);
         router.refresh();
       }
     } catch (err) {
-      setError('Une erreur est survenue');
+      console.error('[LOGIN] Exception during sign in:', err);
+      setError('Une erreur est survenue: ' + (err instanceof Error ? err.message : String(err)));
       setLoading(false);
     }
   };

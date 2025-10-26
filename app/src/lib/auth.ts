@@ -11,7 +11,10 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
+        console.log('[AUTH] Login attempt for username:', credentials?.username);
+
         if (!credentials?.username || !credentials?.password) {
+          console.log('[AUTH] Missing credentials');
           return null;
         }
 
@@ -19,12 +22,13 @@ export const authOptions: NextAuthOptions = {
         const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
 
         if (!adminPasswordHash) {
-          console.error('ADMIN_PASSWORD_HASH not configured');
+          console.error('[AUTH] ADMIN_PASSWORD_HASH not configured');
           return null;
         }
 
         // Vérifier username
         if (credentials.username !== adminUsername) {
+          console.log('[AUTH] Invalid username');
           return null;
         }
 
@@ -32,8 +36,11 @@ export const authOptions: NextAuthOptions = {
         const isValid = await bcrypt.compare(credentials.password, adminPasswordHash);
 
         if (!isValid) {
+          console.log('[AUTH] Invalid password');
           return null;
         }
+
+        console.log('[AUTH] Login successful for:', credentials.username);
 
         // Retourner user object
         return {
@@ -53,19 +60,6 @@ export const authOptions: NextAuthOptions = {
     signIn: '/login',
   },
   callbacks: {
-    async redirect({ url, baseUrl }) {
-      // Toujours utiliser des chemins relatifs pour éviter les problèmes de domaine
-      // Si l'URL commence par le baseUrl, extraire seulement le chemin
-      if (url.startsWith(baseUrl)) {
-        return url.slice(baseUrl.length);
-      }
-      // Si c'est déjà un chemin relatif, le retourner tel quel
-      if (url.startsWith('/')) {
-        return url;
-      }
-      // Par défaut, rediriger vers le dashboard
-      return '/dashboard';
-    },
     async jwt({ token, user }) {
       if (user) {
         token.role = (user as any).role;
