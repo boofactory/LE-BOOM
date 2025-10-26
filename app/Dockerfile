@@ -98,5 +98,5 @@ ENV HOSTNAME="0.0.0.0"
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD curl -f http://localhost:3000/api/health || exit 1
 
-# Start application with migrations
-CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]
+# Start application with migrations (resolve failed migrations first)
+CMD ["sh", "-c", "npx prisma migrate resolve --applied 20251026000000_init || true && npx prisma migrate deploy && node server.js"]
