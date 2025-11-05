@@ -128,9 +128,13 @@ model SpeedTest {
 // Utilisateurs (Phase 2 - OAuth Infomaniak)
 // ============================================
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
+  id       Int     @id @default(autoincrement())
+  email    String  @unique
+  name     String?
+  username String? @unique
+
+  // Password for local auth (bcrypt hash)
+  password String?
 
   // OAuth Infomaniak (Phase 2)
   infomaniakId String? @unique @map("infomaniak_id")

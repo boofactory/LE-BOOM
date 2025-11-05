@@ -1,6 +1,20 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcrypt';
+import { prisma } from '@/lib/prisma';
+import { getOrCreateNextAuthSecret } from '@/lib/db-init';
+
+// Get NextAuth secret from database
+let cachedSecret: string | null = null;
+
+async function getNextAuthSecret(): Promise<string> {
+  if (cachedSecret) {
+    return cachedSecret;
+  }
+
+  cachedSecret = await getOrCreateNextAuthSecret();
+  return cachedSecret;
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -18,37 +32,38 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        const adminUsername = process.env.ADMIN_USERNAME || 'boo-team';
-        const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
+        try {
+          // Find user in database by username
+          const user = await prisma.user.findUnique({
+            where: { username: credentials.username },
+          });
 
-        if (!adminPasswordHash) {
-          console.error('[AUTH] ADMIN_PASSWORD_HASH not configured');
+          if (!user || !user.password) {
+            console.log('[AUTH] User not found or no password set');
+            return null;
+          }
+
+          // Verify password with bcrypt
+          const isValid = await bcrypt.compare(credentials.password, user.password);
+
+          if (!isValid) {
+            console.log('[AUTH] Invalid password');
+            return null;
+          }
+
+          console.log('[AUTH] Login successful for:', credentials.username);
+
+          // Return user object
+          return {
+            id: user.id.toString(),
+            name: user.name || user.username,
+            email: user.email,
+            role: user.role.toLowerCase(),
+          };
+        } catch (error) {
+          console.error('[AUTH] Error during authentication:', error);
           return null;
         }
-
-        // Vérifier username
-        if (credentials.username !== adminUsername) {
-          console.log('[AUTH] Invalid username');
-          return null;
-        }
-
-        // Vérifier password avec bcrypt
-        const isValid = await bcrypt.compare(credentials.password, adminPasswordHash);
-
-        if (!isValid) {
-          console.log('[AUTH] Invalid password');
-          return null;
-        }
-
-        console.log('[AUTH] Login successful for:', credentials.username);
-
-        // Retourner user object
-        return {
-          id: '1',
-          name: 'BooFactory Team',
-          email: 'tech@boofactory.ch',
-          role: 'admin',
-        };
       }
     })
   ],
@@ -73,5 +88,6 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  // Use env var as fallback, will be set by getOrCreateNextAuthSecret() on first use
+  secret: process.env.NEXTAUTH_SECRET || 'fallback-secret-will-be-generated',
 };
