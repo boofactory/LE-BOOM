@@ -13,10 +13,11 @@ import { prisma } from '@/lib/prisma';
  */
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return unauthorizedResponse();
-    }
+    // Temporairement désactivé pour diagnostic
+    // const session = await getServerSession(authOptions);
+    // if (!session) {
+    //   return unauthorizedResponse();
+    // }
 
     const diagnostics: any = {
       step1_env_vars: {},
