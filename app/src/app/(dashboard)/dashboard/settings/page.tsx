@@ -29,12 +29,21 @@ const SETTING_KEYS = [
   },
 ];
 
+interface NotionDatabase {
+  id: string;
+  title: string;
+  description: string;
+  url: string;
+}
+
 export default function SettingsPage() {
   const [settings, setSettings] = useState<Setting[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
+  const [notionDatabases, setNotionDatabases] = useState<NotionDatabase[]>([]);
+  const [loadingDatabases, setLoadingDatabases] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -57,6 +66,26 @@ export default function SettingsPage() {
       console.error('Error loading settings:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadNotionDatabases = async () => {
+    setLoadingDatabases(true);
+    try {
+      const response = await fetch('/api/notion/databases');
+      const data = await response.json();
+
+      if (data.databases) {
+        setNotionDatabases(data.databases);
+        setMessage({ type: 'success', text: `${data.databases.length} base(s) de données trouvée(s)` });
+      } else if (data.error) {
+        setMessage({ type: 'error', text: data.error });
+      }
+    } catch (error) {
+      console.error('Error loading Notion databases:', error);
+      setMessage({ type: 'error', text: 'Erreur lors du chargement des databases Notion' });
+    } finally {
+      setLoadingDatabases(false);
     }
   };
 
@@ -170,28 +199,68 @@ export default function SettingsPage() {
                   )}
                 </div>
 
-                <div className="flex gap-3">
-                  <input
-                    type={settingDef.encrypted ? 'password' : 'text'}
-                    value={editValues[settingDef.key] || ''}
-                    onChange={(e) => handleChange(settingDef.key, e.target.value)}
-                    placeholder={
-                      settingDef.encrypted
-                        ? hasValue
-                          ? 'Laisser vide pour ne pas modifier'
+                {/* Sélecteur spécial pour NOTION_DATABASE_ID */}
+                {settingDef.key === 'NOTION_DATABASE_ID' ? (
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <button
+                        onClick={loadNotionDatabases}
+                        disabled={loadingDatabases}
+                        className="btn-secondary"
+                      >
+                        {loadingDatabases ? 'Chargement...' : '🔍 Charger les databases Notion'}
+                      </button>
+                    </div>
+
+                    {notionDatabases.length > 0 && (
+                      <div className="flex gap-3">
+                        <select
+                          value={editValues[settingDef.key] || ''}
+                          onChange={(e) => handleChange(settingDef.key, e.target.value)}
+                          className="input-field flex-1"
+                        >
+                          <option value="">-- Sélectionnez une database --</option>
+                          {notionDatabases.map((db) => (
+                            <option key={db.id} value={db.id}>
+                              {db.title} {db.description ? `(${db.description})` : ''}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={() => handleSave(settingDef.key)}
+                          disabled={saving || !editValues[settingDef.key]}
+                          className="btn-primary px-6"
+                        >
+                          {saving ? 'Enregistrement...' : 'Enregistrer'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* Input classique pour les autres settings */
+                  <div className="flex gap-3">
+                    <input
+                      type={settingDef.encrypted ? 'password' : 'text'}
+                      value={editValues[settingDef.key] || ''}
+                      onChange={(e) => handleChange(settingDef.key, e.target.value)}
+                      placeholder={
+                        settingDef.encrypted
+                          ? hasValue
+                            ? 'Laisser vide pour ne pas modifier'
+                            : 'Entrez la valeur'
                           : 'Entrez la valeur'
-                        : 'Entrez la valeur'
-                    }
-                    className="input-field flex-1"
-                  />
-                  <button
-                    onClick={() => handleSave(settingDef.key)}
-                    disabled={saving}
-                    className="btn-primary px-6"
-                  >
-                    {saving ? 'Enregistrement...' : 'Enregistrer'}
-                  </button>
-                </div>
+                      }
+                      className="input-field flex-1"
+                    />
+                    <button
+                      onClick={() => handleSave(settingDef.key)}
+                      disabled={saving}
+                      className="btn-primary px-6"
+                    >
+                      {saving ? 'Enregistrement...' : 'Enregistrer'}
+                    </button>
+                  </div>
+                )}
 
                 {existing && existing.updatedAt && (
                   <p className="text-xs text-gray-400 mt-2">
