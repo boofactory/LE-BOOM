@@ -13,11 +13,10 @@ import { getNotionCredentials } from '@/lib/notion-config';
  */
 export async function GET(request: NextRequest) {
   try {
-    // Temporairement désactivé pour test
-    // const session = await getServerSession(authOptions);
-    // if (!session) {
-    //   return unauthorizedResponse();
-    // }
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return unauthorizedResponse();
+    }
 
     // Récupérer les credentials Notion (ignore les placeholders)
     const { token: notionToken, source } = await getNotionCredentials();
