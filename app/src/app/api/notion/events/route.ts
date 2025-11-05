@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { successResponse, errorResponse, unauthorizedResponse } from '@/lib/response';
 import { Client } from '@notionhq/client';
-import { prisma } from '@/lib/prisma';
+import { getNotionCredentials } from '@/lib/notion-config';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -18,34 +18,8 @@ export async function GET(request: NextRequest) {
       return unauthorizedResponse();
     }
 
-    // Récupérer les credentials Notion depuis les settings ou env vars
-    let notionToken = process.env.NOTION_API_TOKEN;
-    let notionDatabaseId = process.env.NOTION_DATABASE_ID;
-
-    console.log('[NOTION-EVENTS] Env vars:', {
-      hasEnvToken: !!notionToken,
-      hasEnvDb: !!notionDatabaseId,
-    });
-
-    // Si pas dans env vars, chercher dans settings
-    if (!notionToken || !notionDatabaseId) {
-      const tokenSetting = await prisma.setting.findUnique({
-        where: { key: 'NOTION_API_TOKEN' },
-      });
-      const dbSetting = await prisma.setting.findUnique({
-        where: { key: 'NOTION_DATABASE_ID' },
-      });
-
-      console.log('[NOTION-EVENTS] Settings:', {
-        hasTokenSetting: !!tokenSetting,
-        tokenLength: tokenSetting?.value?.length,
-        hasDbSetting: !!dbSetting,
-        dbId: dbSetting?.value,
-      });
-
-      notionToken = tokenSetting?.value || notionToken;
-      notionDatabaseId = dbSetting?.value || notionDatabaseId;
-    }
+    // Récupérer les credentials Notion (ignore les placeholders)
+    const { token: notionToken, databaseId: notionDatabaseId, source } = await getNotionCredentials();
 
     if (!notionToken || !notionDatabaseId) {
       console.error('[NOTION-EVENTS] Missing configuration:', {
@@ -58,6 +32,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    console.log('[NOTION-EVENTS] Using credentials from:', source);
     console.log('[NOTION-EVENTS] Fetching from database:', {
       databaseId: notionDatabaseId,
       tokenLength: notionToken.length,

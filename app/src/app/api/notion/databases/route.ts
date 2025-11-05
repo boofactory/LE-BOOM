@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { successResponse, errorResponse, unauthorizedResponse } from '@/lib/response';
 import { Client } from '@notionhq/client';
-import { prisma } from '@/lib/prisma';
+import { getNotionCredentials } from '@/lib/notion-config';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -18,23 +18,17 @@ export async function GET(request: NextRequest) {
       return unauthorizedResponse();
     }
 
-    // Récupérer le token Notion
-    let notionToken = process.env.NOTION_API_TOKEN;
-
-    if (!notionToken) {
-      const tokenSetting = await prisma.setting.findUnique({
-        where: { key: 'NOTION_API_TOKEN' },
-      });
-      notionToken = tokenSetting?.value;
-    }
+    // Récupérer les credentials Notion (ignore les placeholders)
+    const { token: notionToken, source } = await getNotionCredentials();
 
     if (!notionToken) {
       return errorResponse(
-        'Token Notion manquant. Veuillez d\'abord configurer NOTION_API_TOKEN.',
+        'Token Notion manquant. Veuillez d\'abord configurer NOTION_API_TOKEN dans les paramètres.',
         400
       );
     }
 
+    console.log('[NOTION-DATABASES] Using token from:', source);
     console.log('[NOTION-DATABASES] Fetching databases list');
 
     const notion = new Client({ auth: notionToken });
