@@ -103,8 +103,5 @@ ENV HOSTNAME="0.0.0.0"
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD curl -f http://localhost:3000/api/health || exit 1
 
-# Set entrypoint
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
-
-# Start application
-CMD ["node", "server.js"]
+# Start application with entrypoint script that handles credential encoding
+CMD ["/app/docker-entrypoint.sh"]
