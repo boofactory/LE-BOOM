@@ -71,11 +71,13 @@ services:
       # Node environment
       NODE_ENV: production
 
-      # Database connection
-      DATABASE_URL: postgresql://${POSTGRES_USER:-boom_admin}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-boom_v2}
+      # Database connection (entrypoint will build DATABASE_URL with URL encoding)
+      POSTGRES_USER: ${POSTGRES_USER:-boom_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-boom_v2}
 
-      # Redis connection
-      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      # Redis connection (entrypoint will build REDIS_URL with URL encoding)
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
 
       # NextAuth configuration
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
