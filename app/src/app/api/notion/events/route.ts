@@ -56,13 +56,13 @@ export async function GET(request: NextRequest) {
           {
             or: [
               {
-                property: 'État',
+                property: 'Etat installation',
                 status: {
                   does_not_equal: 'À l\'atelier',
                 },
               },
               {
-                property: 'État',
+                property: 'Etat installation',
                 status: {
                   is_empty: true,
                 },
@@ -133,11 +133,11 @@ export async function GET(request: NextRequest) {
         total_digital: getNumber(props['Digital'] || props['Nb Digital']),
         total_prints: getNumber(props['Prints'] || props['Nb Prints']),
         total_gifs: getNumber(props['GIFs'] || props['Nb GIFs']),
-        // Nouveaux champs pour le suivi installation/récupération (basés sur "État")
-        installation_status: getStatus(props['État']),
+        // Nouveaux champs pour le suivi installation/récupération (basés sur "Etat installation")
+        installation_status: getStatus(props['Etat installation']),
         installation_date: null,
         installation_notes: getRichText(props['Info installation']),
-        return_status: getStatus(props['État']), // Même champ "État" pour les deux
+        return_status: getStatus(props['Etat installation']), // Même champ "Etat installation" pour les deux
         return_date: null,
         return_notes: '',
         notion_data: props,

@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
         await notion.pages.update({
           page_id: page.id,
           properties: {
-            'État': {
+            'Etat installation': {
               status: {
                 name: 'À l\'atelier',
               },

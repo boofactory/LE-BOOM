@@ -48,7 +48,7 @@ export async function PATCH(
     await notion.pages.update({
       page_id: id,
       properties: {
-        'État': {
+        'Etat installation': {
           status: {
             name: 'À l\'atelier',
           },
