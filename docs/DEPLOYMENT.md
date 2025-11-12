@@ -171,14 +171,22 @@ npx prisma migrate deploy
 
 ### Méthode 2: Via API Portainer (Automatisé)
 
-Configurer un webhook GitHub qui déclenche le redéploiement:
+**IMPORTANT**: Utiliser la commande suivante avec le bon format de body JSON:
 
 ```bash
-curl -X POST "https://portainer.boofactory.ch/api/stacks/<stack-id>/git/redeploy" \
-  -H "X-API-Key: ptr_8lig2q3X9BhaQbaCuJoA/f2dXqjSC6rrpNWGYrB1nrI=" \
+# Stack ID: 71
+# Endpoint ID: 3
+curl -X PUT "https://portainer.boofactory.ch/api/stacks/71/git/redeploy?endpointId=3" \
+  -H "X-API-Key: ptr_zBlD+aR7Dveqdv6EP6YKqq5PRfZPe9hrHrWQ/nqdeY8=" \
   -H "Content-Type: application/json" \
-  -d '{"RepositoryReferenceName":"refs/heads/main"}'
+  -d '{"repositoryReferenceName":"","repositoryAuthentication":false,"pullImage":true,"prune":false}'
 ```
+
+**Paramètres importants**:
+- `repositoryReferenceName`: "" (vide = utilise la branche configurée dans la stack)
+- `repositoryAuthentication`: false (pas besoin d'auth pour repo public)
+- `pullImage`: true (force le pull de la nouvelle image Docker)
+- `prune`: false (ne supprime pas les volumes)
 
 Ou via GitHub Actions (workflow déjà configuré dans `.github/workflows/deploy.yml`).
 
