@@ -70,12 +70,15 @@ export default function EventCard({ event, onOpenDetails, onOpenStatus }: EventC
 
   // Determine overall status badge
   const getStatusBadge = () => {
-    if (returnStatus && returnStatus.toLowerCase().includes('récupéré')) {
-      return { text: '🏠 Récupéré', color: 'bg-blue-100 text-blue-800' };
+    // État = "À l'atelier" → Récupéré (mais normalement filtré côté API)
+    if (installationStatus && installationStatus.toLowerCase().includes('atelier')) {
+      return { text: '🏠 À l\'atelier', color: 'bg-blue-100 text-blue-800' };
     }
+    // État = "Installé" → Installé
     if (installationStatus && installationStatus.toLowerCase().includes('installé')) {
       return { text: '✅ Installé', color: 'bg-green-100 text-green-800' };
     }
+    // État vide ou "À installer" → À installer (défaut)
     return { text: '📦 À installer', color: 'bg-orange-100 text-orange-800' };
   };
 
@@ -293,13 +296,14 @@ export default function EventCard({ event, onOpenDetails, onOpenStatus }: EventC
 
           {/* Quick Status Button */}
           {(() => {
-            const isInstalled = installationStatus.toLowerCase().includes('installé');
-            const isReturned = returnStatus.toLowerCase().includes('récupéré');
+            const status = installationStatus ? installationStatus.toLowerCase() : '';
+            const isAtelier = status.includes('atelier');
+            const isInstalled = status.includes('installé');
 
-            if (isReturned) return null; // No button if already returned
+            if (isAtelier) return null; // No button if already at atelier (filtré normalement)
 
-            if (!isInstalled) {
-              // Show "Installer" button
+            if (!isInstalled || status === '') {
+              // Show "Installer" button (défaut si vide ou "À installer")
               return (
                 <button
                   onClick={() => onOpenStatus?.(event, 'installation')}
@@ -312,7 +316,7 @@ export default function EventCard({ event, onOpenDetails, onOpenStatus }: EventC
                 </button>
               );
             } else {
-              // Show "Récupérer" button
+              // Show "Récupérer" button (si installé)
               return (
                 <button
                   onClick={() => onOpenStatus?.(event, 'return')}

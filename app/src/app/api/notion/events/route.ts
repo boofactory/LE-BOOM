@@ -42,8 +42,35 @@ export async function GET(request: NextRequest) {
     const notion = new Client({ auth: notionToken });
 
     // Récupérer les événements depuis Notion (triés par date, événements à venir en premier)
+    // Filtrer uniquement les événements avec "A Livrer" non vide ET État ≠ "À l'atelier"
     const response = await notion.databases.query({
       database_id: notionDatabaseId,
+      filter: {
+        and: [
+          {
+            property: 'A Livrer',
+            rich_text: {
+              is_not_empty: true,
+            },
+          },
+          {
+            or: [
+              {
+                property: 'État',
+                status: {
+                  does_not_equal: 'À l\'atelier',
+                },
+              },
+              {
+                property: 'État',
+                status: {
+                  is_empty: true,
+                },
+              },
+            ],
+          },
+        ],
+      },
       sorts: [
         {
           property: 'Date évènement',
@@ -106,13 +133,13 @@ export async function GET(request: NextRequest) {
         total_digital: getNumber(props['Digital'] || props['Nb Digital']),
         total_prints: getNumber(props['Prints'] || props['Nb Prints']),
         total_gifs: getNumber(props['GIFs'] || props['Nb GIFs']),
-        // Nouveaux champs pour le suivi installation/récupération
-        installation_status: getStatus(props['Statut Installation']),
-        installation_date: getDate(props['Installation - Date réelle']),
-        installation_notes: getRichText(props['Notes Installation']),
-        return_status: getStatus(props['Statut Récupération']),
-        return_date: getDate(props['Récupération - Date réelle']),
-        return_notes: getRichText(props['Notes Récupération']),
+        // Nouveaux champs pour le suivi installation/récupération (basés sur "État")
+        installation_status: getStatus(props['État']),
+        installation_date: null,
+        installation_notes: getRichText(props['Info installation']),
+        return_status: getStatus(props['État']), // Même champ "État" pour les deux
+        return_date: null,
+        return_notes: '',
         notion_data: props,
         url: page.url,
       };

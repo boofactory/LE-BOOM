@@ -122,31 +122,33 @@ export default function DashboardPage() {
 
   // Filter events by tab
   const filteredEvents = events.filter((event) => {
-    const installationStatus = event.installation_status || '';
-    const returnStatus = event.return_status || '';
-
-    const isInstalled = installationStatus.toLowerCase().includes('installé');
-    const isReturned = returnStatus.toLowerCase().includes('récupéré');
+    const status = (event.installation_status || '').toLowerCase();
+    const isInstalled = status.includes('installé');
+    const eventDate = event.event_date ? new Date(event.event_date) : null;
+    const isPastEvent = eventDate && eventDate < new Date();
 
     switch (activeTab) {
       case 'upcoming':
-        // À venir: pas encore récupéré
-        return !isReturned;
+        // À venir: pas encore installé (statut vide ou pas "Installé")
+        return !isInstalled;
       case 'installed':
-        // Installés: installé mais pas récupéré
-        return isInstalled && !isReturned;
+        // Installés: statut "Installé"
+        return isInstalled;
       case 'history':
-        // Historique: récupéré
-        return isReturned;
+        // Historique: événements passés (date < aujourd'hui)
+        return isPastEvent;
       default:
         return true;
     }
   });
 
   const tabs = [
-    { id: 'upcoming' as TabType, label: '📅 À venir', count: events.filter(e => !(e.return_status || '').toLowerCase().includes('récupéré')).length },
-    { id: 'installed' as TabType, label: '✅ Installés', count: events.filter(e => (e.installation_status || '').toLowerCase().includes('installé') && !(e.return_status || '').toLowerCase().includes('récupéré')).length },
-    { id: 'history' as TabType, label: '📦 Historique', count: events.filter(e => (e.return_status || '').toLowerCase().includes('récupéré')).length },
+    { id: 'upcoming' as TabType, label: '📅 À venir', count: events.filter(e => !(e.installation_status || '').toLowerCase().includes('installé')).length },
+    { id: 'installed' as TabType, label: '✅ Installés', count: events.filter(e => (e.installation_status || '').toLowerCase().includes('installé')).length },
+    { id: 'history' as TabType, label: '📦 Historique', count: events.filter(e => {
+      const eventDate = e.event_date ? new Date(e.event_date) : null;
+      return eventDate && eventDate < new Date();
+    }).length },
   ];
 
   return (

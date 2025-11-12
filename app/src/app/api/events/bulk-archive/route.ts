@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     const notion = new Client({ auth: notionToken });
 
-    // Récupérer tous les événements avant cette date
+    // Récupérer tous les événements avant cette date qui ont "A Livrer" non vide
     const response = await notion.databases.query({
       database_id: notionDatabaseId,
       filter: {
@@ -48,20 +48,10 @@ export async function POST(request: NextRequest) {
             },
           },
           {
-            or: [
-              {
-                property: 'Statut Récupération',
-                status: {
-                  does_not_equal: 'Récupéré',
-                },
-              },
-              {
-                property: 'Statut Récupération',
-                status: {
-                  is_empty: true,
-                },
-              },
-            ],
+            property: 'A Livrer',
+            rich_text: {
+              is_not_empty: true,
+            },
           },
         ],
       },
@@ -78,29 +68,16 @@ export async function POST(request: NextRequest) {
         await notion.pages.update({
           page_id: page.id,
           properties: {
-            'Statut Installation': {
+            'État': {
               status: {
-                name: 'Installé',
+                name: 'À l\'atelier',
               },
             },
-            'Statut Récupération': {
-              status: {
-                name: 'Récupéré',
-              },
+            'A Livrer': {
+              rich_text: [], // Vider le champ pour masquer du dashboard
             },
-            'Récupération - Date réelle': {
-              date: {
-                start: before_date,
-              },
-            },
-            'Notes Récupération': {
-              rich_text: [
-                {
-                  text: {
-                    content: 'Archivage automatique des anciens événements',
-                  },
-                },
-              ],
+            'Admin Post - Récupération Matériel': {
+              checkbox: true,
             },
           },
         });

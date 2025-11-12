@@ -48,27 +48,17 @@ export async function PATCH(
     await notion.pages.update({
       page_id: id,
       properties: {
-        'Statut Récupération': {
+        'État': {
           status: {
-            name: 'Récupéré',
+            name: 'À l\'atelier',
           },
         },
-        'Récupération - Date réelle': {
-          date: {
-            start: return_date,
-          },
+        'A Livrer': {
+          rich_text: [], // Vider pour masquer du dashboard
         },
-        ...(notes && {
-          'Notes Récupération': {
-            rich_text: [
-              {
-                text: {
-                  content: notes,
-                },
-              },
-            ],
-          },
-        }),
+        'Admin Post - Récupération Matériel': {
+          checkbox: true,
+        },
       },
     });
 

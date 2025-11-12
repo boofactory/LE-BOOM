@@ -45,18 +45,13 @@ export async function PATCH(
     await notion.pages.update({
       page_id: id,
       properties: {
-        'Statut Installation': {
+        'État': {
           status: {
             name: 'Installé',
           },
         },
-        'Installation - Date réelle': {
-          date: {
-            start: installation_date,
-          },
-        },
         ...(notes && {
-          'Notes Installation': {
+          'Info installation': {
             rich_text: [
               {
                 text: {
