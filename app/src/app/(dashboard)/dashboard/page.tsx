@@ -4,6 +4,8 @@ import EventCard from '@/components/EventCard';
 import EventModal from '@/components/EventModal';
 import { useEffect, useState } from 'react';
 
+type TabType = 'upcoming' | 'installed' | 'history';
+
 export default function DashboardPage() {
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -12,6 +14,7 @@ export default function DashboardPage() {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabType>('upcoming');
 
   const handleOpenModal = (event: any) => {
     setSelectedEvent(event);
@@ -93,6 +96,35 @@ export default function DashboardPage() {
     return lastUpdate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   };
 
+  // Filter events by tab
+  const filteredEvents = events.filter((event) => {
+    const installationStatus = event.installation_status || '';
+    const returnStatus = event.return_status || '';
+
+    const isInstalled = installationStatus.toLowerCase().includes('installé');
+    const isReturned = returnStatus.toLowerCase().includes('récupéré');
+
+    switch (activeTab) {
+      case 'upcoming':
+        // À venir: pas encore récupéré
+        return !isReturned;
+      case 'installed':
+        // Installés: installé mais pas récupéré
+        return isInstalled && !isReturned;
+      case 'history':
+        // Historique: récupéré
+        return isReturned;
+      default:
+        return true;
+    }
+  });
+
+  const tabs = [
+    { id: 'upcoming' as TabType, label: '📅 À venir', count: events.filter(e => !(e.return_status || '').toLowerCase().includes('récupéré')).length },
+    { id: 'installed' as TabType, label: '✅ Installés', count: events.filter(e => (e.installation_status || '').toLowerCase().includes('installé') && !(e.return_status || '').toLowerCase().includes('récupéré')).length },
+    { id: 'history' as TabType, label: '📦 Historique', count: events.filter(e => (e.return_status || '').toLowerCase().includes('récupéré')).length },
+  ];
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -109,6 +141,34 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="mb-6 border-b border-gray-200">
+        <div className="flex space-x-8">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === tab.id
+                  ? 'border-coral text-coral'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              {tab.label}
+              {tab.count > 0 && (
+                <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
+                  activeTab === tab.id
+                    ? 'bg-coral/10 text-coral'
+                    : 'bg-gray-100 text-gray-600'
+                }`}>
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {error && (
         <div className="card bg-red-50 border border-red-200 text-red-800 mb-6 p-4">
           <p className="font-medium">Erreur</p>
@@ -120,16 +180,24 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {events.length === 0 && !error ? (
+      {filteredEvents.length === 0 && !error ? (
         <div className="card text-center py-12">
-          <p className="text-gray-500 mb-4">Aucun événement trouvé dans Notion</p>
+          <p className="text-gray-500 mb-4">
+            {events.length === 0
+              ? 'Aucun événement trouvé dans Notion'
+              : `Aucun événement dans l'onglet "${tabs.find(t => t.id === activeTab)?.label}"`
+            }
+          </p>
           <p className="text-sm text-gray-400">
-            Les événements s'affichent automatiquement depuis votre base Notion
+            {events.length === 0
+              ? 'Les événements s\'affichent automatiquement depuis votre base Notion'
+              : 'Essayez un autre onglet pour voir plus d\'événements'
+            }
           </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events.map((event) => (
+          {filteredEvents.map((event) => (
             <EventCard key={event.id} event={event} onOpenDetails={handleOpenModal} />
           ))}
         </div>
