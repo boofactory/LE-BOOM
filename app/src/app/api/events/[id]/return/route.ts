@@ -57,7 +57,9 @@ export async function PATCH(
           rich_text: [], // Vider pour masquer du dashboard
         },
         'Admin Post - Récupération Matériel': {
-          checkbox: true,
+          select: {
+            name: 'Fait',
+          },
         },
       },
     });

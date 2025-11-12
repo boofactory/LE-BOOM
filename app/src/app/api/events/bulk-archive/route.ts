@@ -77,7 +77,9 @@ export async function POST(request: NextRequest) {
               rich_text: [], // Vider le champ pour masquer du dashboard
             },
             'Admin Post - Récupération Matériel': {
-              checkbox: true,
+              select: {
+                name: 'Fait',
+              },
             },
           },
         });
