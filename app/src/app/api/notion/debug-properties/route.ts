@@ -42,6 +42,19 @@ export async function GET(request: NextRequest) {
       })),
     }));
 
+    // Log to server console for debugging
+    console.log('\n=== NOTION PROPERTIES DEBUG ===');
+    debugData.forEach((event, i) => {
+      console.log(`\nEvent ${i + 1} (${event.id}):`);
+      event.properties.forEach(prop => {
+        if (prop.name.toLowerCase().includes('livrer') || prop.name === 'A Livrer') {
+          console.log(`  → ${prop.name} (${prop.type}):`, JSON.stringify(prop.value, null, 2));
+        }
+      });
+      console.log('  All property names:', event.properties.map(p => p.name).join(', '));
+    });
+    console.log('=== END DEBUG ===\n');
+
     return successResponse({ events: debugData });
   } catch (error: any) {
     console.error('[DEBUG-PROPERTIES] Error:', error);
