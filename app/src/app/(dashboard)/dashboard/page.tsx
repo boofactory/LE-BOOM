@@ -6,11 +6,18 @@ import { useEffect, useState } from 'react';
 export default function DashboardPage() {
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
-  const fetchEventsFromNotion = async () => {
+  const fetchEventsFromNotion = async (isAutoRefresh = false) => {
     try {
-      setLoading(true);
+      // Pour l'auto-refresh, on ne bloque pas l'UI
+      if (isAutoRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
       setError(null);
 
       // Appeler l'API Notion directement pour récupérer les événements
@@ -22,6 +29,7 @@ export default function DashboardPage() {
         setEvents([]);
       } else {
         setEvents(data.events || []);
+        setLastUpdate(new Date());
       }
     } catch (error) {
       console.error('Error fetching events from Notion:', error);
@@ -29,11 +37,22 @@ export default function DashboardPage() {
       setEvents([]);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
+  // Initial load
   useEffect(() => {
     fetchEventsFromNotion();
+  }, []);
+
+  // Auto-refresh toutes les 5 minutes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchEventsFromNotion(true);
+    }, 5 * 60 * 1000); // 5 minutes
+
+    return () => clearInterval(interval);
   }, []);
 
   if (loading) {
@@ -44,17 +63,32 @@ export default function DashboardPage() {
     );
   }
 
+  const formatLastUpdate = () => {
+    if (!lastUpdate) return '';
+    const now = new Date();
+    const diffMs = now.getTime() - lastUpdate.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+
+    if (diffMins < 1) return 'À l\'instant';
+    if (diffMins === 1) return 'Il y a 1 minute';
+    if (diffMins < 60) return `Il y a ${diffMins} minutes`;
+    return lastUpdate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold text-dark">Événements Notion</h2>
-        <button
-          onClick={fetchEventsFromNotion}
-          disabled={loading}
-          className="btn-secondary"
-        >
-          {loading ? 'Chargement...' : '🔄 Rafraîchir'}
-        </button>
+        <div>
+          <h2 className="text-3xl font-bold text-dark">Événements</h2>
+          {lastUpdate && (
+            <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+              {refreshing && (
+                <span className="inline-block w-2 h-2 bg-skyblue rounded-full animate-pulse"></span>
+              )}
+              Mise à jour: {formatLastUpdate()}
+            </p>
+          )}
+        </div>
       </div>
 
       {error && (

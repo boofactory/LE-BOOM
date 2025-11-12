@@ -41,13 +41,13 @@ export async function GET(request: NextRequest) {
 
     const notion = new Client({ auth: notionToken });
 
-    // Récupérer les événements depuis Notion
+    // Récupérer les événements depuis Notion (triés par date, événements à venir en premier)
     const response = await notion.databases.query({
       database_id: notionDatabaseId,
       sorts: [
         {
           property: 'Date évènement',
-          direction: 'descending',
+          direction: 'ascending',
         },
       ],
     });
@@ -59,8 +59,18 @@ export async function GET(request: NextRequest) {
       const props = page.properties;
 
       // Extraire les propriétés de manière sécurisée
-      const getTitle = (prop: any) => {
+      // Fonction flexible pour extraire le nom client (supporte Title, Rich Text, Select)
+      const getClientName = (prop: any) => {
+        if (!prop) return 'Sans titre';
+        // Try Title type (page title)
         if (prop?.title?.[0]?.plain_text) return prop.title[0].plain_text;
+        // Try Rich Text type
+        if (prop?.rich_text?.[0]?.plain_text) return prop.rich_text[0].plain_text;
+        // Try Select type
+        if (prop?.select?.name) return prop.select.name;
+        // Try People type (first person)
+        if (prop?.people?.[0]?.name) return prop.people[0].name;
+        // Try Relation (would need additional query, skip for now)
         return 'Sans titre';
       };
 
@@ -79,10 +89,15 @@ export async function GET(request: NextRequest) {
         return 0;
       };
 
+      const getStatus = (prop: any) => {
+        if (prop?.status?.name) return prop.status.name;
+        return '';
+      };
+
       return {
         id: page.id,
         notion_page_id: page.id,
-        client_name: getTitle(props['Client'] || props['Nom'] || props['Name']),
+        client_name: getClientName(props['Client'] || props['Nom'] || props['Name']),
         event_type: getRichText(props['Type'] || props['Type événement'] || props["Type d'évenement"]),
         event_date: getDate(props['Date évènement']),
         album_name: getRichText(props['Album'] || props['Nom Album']),
@@ -91,6 +106,13 @@ export async function GET(request: NextRequest) {
         total_digital: getNumber(props['Digital'] || props['Nb Digital']),
         total_prints: getNumber(props['Prints'] || props['Nb Prints']),
         total_gifs: getNumber(props['GIFs'] || props['Nb GIFs']),
+        // Nouveaux champs pour le suivi installation/récupération
+        installation_status: getStatus(props['Statut Installation']),
+        installation_date: getDate(props['Installation - Date réelle']),
+        installation_notes: getRichText(props['Notes Installation']),
+        return_status: getStatus(props['Statut Récupération']),
+        return_date: getDate(props['Récupération - Date réelle']),
+        return_notes: getRichText(props['Notes Récupération']),
         notion_data: props,
         url: page.url,
       };

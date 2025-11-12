@@ -53,6 +53,10 @@ export default function EventCard({ event }: EventCardProps) {
   const notionUrl = event.url || null;
   const notionData = event.notion_data || {};
 
+  // Status fields from API
+  const installationStatus = event.installation_status || '';
+  const returnStatus = event.return_status || '';
+
   // Extract additional fields from notion_data
   const location = getNotionValue(notionData, ['lieu de l\'évenement', 'Lieu', 'Location']);
   const prestations = getNotionValue(notionData, ['Prestations', 'Services']);
@@ -61,6 +65,25 @@ export default function EventCard({ event }: EventCardProps) {
   const recuperationTime = getNotionValue(notionData, ['Event - Heure Récupération', 'Heure Récupération']);
   const recuperationStaff = getNotionValue(notionData, ['Staff Récupération', 'Récupération Staff']);
   const importantInfo = getNotionValue(notionData, ['Info importante', 'Important']);
+
+  // Determine overall status badge
+  const getStatusBadge = () => {
+    if (returnStatus && returnStatus.toLowerCase().includes('récupéré')) {
+      return { text: '🏠 Récupéré', color: 'bg-blue-100 text-blue-800' };
+    }
+    if (installationStatus && installationStatus.toLowerCase().includes('installé')) {
+      return { text: '✅ Installé', color: 'bg-green-100 text-green-800' };
+    }
+    return { text: '📦 À installer', color: 'bg-orange-100 text-orange-800' };
+  };
+
+  const statusBadge = getStatusBadge();
+
+  // Google Maps URL for itinerary
+  const getGoogleMapsUrl = () => {
+    if (!location) return '#';
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(location)}`;
+  };
 
   const formatStaffList = (staff: any) => {
     if (Array.isArray(staff)) {
@@ -80,6 +103,13 @@ export default function EventCard({ event }: EventCardProps) {
     <div className="rounded-xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
       {/* Header */}
       <div className="bg-gradient-to-r from-coral to-coral-light p-4 text-white">
+        {/* Status Badge */}
+        <div className="mb-3">
+          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusBadge.color}`}>
+            {statusBadge.text}
+          </span>
+        </div>
+
         <div className="mb-2">
           <h2 className="font-bold text-xl truncate">
             {clientName}
@@ -229,26 +259,39 @@ export default function EventCard({ event }: EventCardProps) {
           </div>
         )}
 
-        {/* Action Button */}
-        {notionUrl && (
-          <div className="pt-3 border-t border-gray-100">
+        {/* Action Buttons */}
+        <div className="pt-3 border-t border-gray-100 flex gap-2">
+          {/* Details Button */}
+          <button
+            onClick={() => {
+              // TODO: Open modal (Phase 4)
+              console.log('Open details modal for event:', event.id);
+            }}
+            className="flex-1 px-4 py-2 bg-coral hover:bg-coral-light text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+          >
+            <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            Détails
+          </button>
+
+          {/* Itinerary Button */}
+          {location && (
             <a
-              href={notionUrl}
+              href={getGoogleMapsUrl()}
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full text-center px-4 py-2 bg-coral hover:bg-coral-light text-white rounded-lg transition-colors"
+              className="flex-1 px-4 py-2 bg-skyblue hover:bg-skyblue-light text-white rounded-lg transition-colors flex items-center justify-center gap-2"
             >
-              <span className="flex items-center justify-center">
-                <svg className="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                  <polyline points="15 3 21 3 21 9"/>
-                  <line x1="10" y1="14" x2="21" y2="3"/>
-                </svg>
-                Voir dans Notion
-              </span>
+              <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+              </svg>
+              Itinéraire
             </a>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
