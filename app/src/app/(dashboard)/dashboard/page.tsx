@@ -1,6 +1,7 @@
 'use client';
 
 import EventCard from '@/components/EventCard';
+import EventModal from '@/components/EventModal';
 import { useEffect, useState } from 'react';
 
 export default function DashboardPage() {
@@ -9,6 +10,23 @@ export default function DashboardPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleOpenModal = (event: any) => {
+    setSelectedEvent(event);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedEvent(null);
+  };
+
+  const handleStatusUpdate = () => {
+    // Refresh events after status update
+    fetchEventsFromNotion(true);
+  };
 
   const fetchEventsFromNotion = async (isAutoRefresh = false) => {
     try {
@@ -112,9 +130,19 @@ export default function DashboardPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {events.map((event) => (
-            <EventCard key={event.id} event={event} />
+            <EventCard key={event.id} event={event} onOpenDetails={handleOpenModal} />
           ))}
         </div>
+      )}
+
+      {/* Event Modal */}
+      {selectedEvent && (
+        <EventModal
+          event={selectedEvent}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onStatusUpdate={handleStatusUpdate}
+        />
       )}
     </div>
   );

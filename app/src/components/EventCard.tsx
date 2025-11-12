@@ -4,6 +4,7 @@
 
 interface EventCardProps {
   event: any;
+  onOpenDetails?: (event: any) => void;
 }
 
 function formatDate(dateString: string | null | undefined): string {
@@ -43,7 +44,7 @@ function getNotionValue(notionData: any, fieldNames: string[]): any {
   return null;
 }
 
-export default function EventCard({ event }: EventCardProps) {
+export default function EventCard({ event, onOpenDetails }: EventCardProps) {
   // Extract data from event (snake_case from API)
   const clientName = event.client_name || 'Sans titre';
   const eventType = event.event_type || null;
@@ -263,10 +264,7 @@ export default function EventCard({ event }: EventCardProps) {
         <div className="pt-3 border-t border-gray-100 flex gap-2">
           {/* Details Button */}
           <button
-            onClick={() => {
-              // TODO: Open modal (Phase 4)
-              console.log('Open details modal for event:', event.id);
-            }}
+            onClick={() => onOpenDetails?.(event)}
             className="flex-1 px-4 py-2 bg-coral hover:bg-coral-light text-white rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
