@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
       database_id: notionDatabaseId,
       sorts: [
         {
-          property: 'Date',
+          property: 'Date évènement',
           direction: 'descending',
         },
       ],
@@ -83,8 +83,8 @@ export async function GET(request: NextRequest) {
         id: page.id,
         notion_page_id: page.id,
         client_name: getTitle(props['Client'] || props['Nom'] || props['Name']),
-        event_type: getRichText(props['Type'] || props['Type événement']),
-        event_date: getDate(props['Date']),
+        event_type: getRichText(props['Type'] || props['Type événement'] || props["Type d'évenement"]),
+        event_date: getDate(props['Date évènement']),
         album_name: getRichText(props['Album'] || props['Nom Album']),
         photomaton: getRichText(props['Photomaton'] || props['Boo']),
         total_sessions: getNumber(props['Sessions'] || props['Nb Sessions']),
