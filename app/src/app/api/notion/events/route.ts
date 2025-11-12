@@ -41,6 +41,37 @@ export async function GET(request: NextRequest) {
 
     const notion = new Client({ auth: notionToken });
 
+    // TEMP: Fetch WITHOUT filter to debug
+    const responseAll = await notion.databases.query({
+      database_id: notionDatabaseId,
+      page_size: 5,
+    });
+
+    console.log('[DEBUG] First 5 events from Notion (no filter):');
+    responseAll.results.forEach((page: any, i: number) => {
+      const props = page.properties;
+      console.log(`\n[DEBUG] Event ${i + 1}:`);
+      console.log('  All properties:', Object.keys(props).join(', '));
+
+      // Check "A Livrer" specifically
+      const aLivrer = props['A Livrer'];
+      if (aLivrer) {
+        console.log(`  A Livrer type: ${aLivrer.type}`);
+        console.log(`  A Livrer value:`, JSON.stringify(aLivrer, null, 2));
+      } else {
+        console.log('  A Livrer: NOT FOUND');
+      }
+
+      // Check "Etat installation"
+      const etat = props['Etat installation'];
+      if (etat) {
+        console.log(`  Etat installation type: ${etat.type}`);
+        console.log(`  Etat installation value:`, JSON.stringify(etat, null, 2));
+      } else {
+        console.log('  Etat installation: NOT FOUND');
+      }
+    });
+
     // Récupérer les événements depuis Notion (triés par date, événements à venir en premier)
     // Filtrer uniquement les événements avec "A Livrer" non vide ET État ≠ "À l'atelier"
     const response = await notion.databases.query({
