@@ -1,7 +1,8 @@
 'use client';
 
 import EventCard from '@/components/EventCard';
-import EventModal from '@/components/EventModal';
+import EventInfoModal from '@/components/EventInfoModal';
+import StatusChangeModal from '@/components/StatusChangeModal';
 import { useEffect, useState } from 'react';
 
 type TabType = 'upcoming' | 'installed' | 'history';
@@ -13,16 +14,39 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('upcoming');
 
-  const handleOpenModal = (event: any) => {
+  // Modal states
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [statusModalMode, setStatusModalMode] = useState<'installation' | 'return'>('installation');
+
+  const handleOpenInfoModal = (event: any) => {
     setSelectedEvent(event);
-    setIsModalOpen(true);
+    setIsInfoModalOpen(true);
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+  const handleOpenStatusModal = (event: any, mode: 'installation' | 'return') => {
+    setSelectedEvent(event);
+    setStatusModalMode(mode);
+    setIsStatusModalOpen(true);
+  };
+
+  const handleOpenStatusFromInfo = () => {
+    setIsInfoModalOpen(false);
+    // Determine mode based on event status
+    const isInstalled = selectedEvent?.installation_status?.toLowerCase().includes('installé');
+    setStatusModalMode(isInstalled ? 'return' : 'installation');
+    setIsStatusModalOpen(true);
+  };
+
+  const handleCloseInfoModal = () => {
+    setIsInfoModalOpen(false);
+    setSelectedEvent(null);
+  };
+
+  const handleCloseStatusModal = () => {
+    setIsStatusModalOpen(false);
     setSelectedEvent(null);
   };
 
@@ -198,18 +222,34 @@ export default function DashboardPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredEvents.map((event) => (
-            <EventCard key={event.id} event={event} onOpenDetails={handleOpenModal} />
+            <EventCard
+              key={event.id}
+              event={event}
+              onOpenDetails={handleOpenInfoModal}
+              onOpenStatus={handleOpenStatusModal}
+            />
           ))}
         </div>
       )}
 
-      {/* Event Modal */}
+      {/* Event Info Modal */}
       {selectedEvent && (
-        <EventModal
+        <EventInfoModal
           event={selectedEvent}
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
+          isOpen={isInfoModalOpen}
+          onClose={handleCloseInfoModal}
+          onOpenStatusModal={handleOpenStatusFromInfo}
+        />
+      )}
+
+      {/* Status Change Modal */}
+      {selectedEvent && (
+        <StatusChangeModal
+          event={selectedEvent}
+          isOpen={isStatusModalOpen}
+          onClose={handleCloseStatusModal}
           onStatusUpdate={handleStatusUpdate}
+          mode={statusModalMode}
         />
       )}
     </div>

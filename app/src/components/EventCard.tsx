@@ -5,6 +5,7 @@
 interface EventCardProps {
   event: any;
   onOpenDetails?: (event: any) => void;
+  onOpenStatus?: (event: any, mode: 'installation' | 'return') => void;
 }
 
 function formatDate(dateString: string | null | undefined): string {
@@ -44,7 +45,7 @@ function getNotionValue(notionData: any, fieldNames: string[]): any {
   return null;
 }
 
-export default function EventCard({ event, onOpenDetails }: EventCardProps) {
+export default function EventCard({ event, onOpenDetails, onOpenStatus }: EventCardProps) {
   // Extract data from event (snake_case from API)
   const clientName = event.client_name || 'Sans titre';
   const eventType = event.event_type || null;
@@ -265,7 +266,7 @@ export default function EventCard({ event, onOpenDetails }: EventCardProps) {
           {/* Details Button */}
           <button
             onClick={() => onOpenDetails?.(event)}
-            className="flex-1 px-4 py-2 bg-coral hover:bg-coral-light text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-2 bg-coral hover:bg-coral-light text-white rounded-lg transition-colors flex items-center justify-center gap-1 text-sm"
           >
             <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10"/>
@@ -281,14 +282,51 @@ export default function EventCard({ event, onOpenDetails }: EventCardProps) {
               href={getGoogleMapsUrl()}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 px-4 py-2 bg-skyblue hover:bg-skyblue-light text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2 bg-skyblue hover:bg-skyblue-light text-white rounded-lg transition-colors flex items-center justify-center gap-1 text-sm"
             >
               <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polygon points="3 11 22 2 13 21 11 13 3 11"/>
               </svg>
-              Itinéraire
+              GPS
             </a>
           )}
+
+          {/* Quick Status Button */}
+          {(() => {
+            const isInstalled = installationStatus.toLowerCase().includes('installé');
+            const isReturned = returnStatus.toLowerCase().includes('récupéré');
+
+            if (isReturned) return null; // No button if already returned
+
+            if (!isInstalled) {
+              // Show "Installer" button
+              return (
+                <button
+                  onClick={() => onOpenStatus?.(event, 'installation')}
+                  className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center justify-center gap-1 text-sm font-medium"
+                >
+                  <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Installer
+                </button>
+              );
+            } else {
+              // Show "Récupérer" button
+              return (
+                <button
+                  onClick={() => onOpenStatus?.(event, 'return')}
+                  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center justify-center gap-1 text-sm font-medium"
+                >
+                  <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                  </svg>
+                  Récupérer
+                </button>
+              );
+            }
+          })()}
         </div>
       </div>
     </div>
