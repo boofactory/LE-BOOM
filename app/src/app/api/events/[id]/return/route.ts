@@ -56,11 +56,6 @@ export async function PATCH(
         'A Livrer': {
           rich_text: [], // Vider pour masquer du dashboard
         },
-        'Admin Post - Récupération Matériel': {
-          select: {
-            name: 'Fait',
-          },
-        },
       },
     });
 

@@ -76,11 +76,6 @@ export async function POST(request: NextRequest) {
             'A Livrer': {
               rich_text: [], // Vider le champ pour masquer du dashboard
             },
-            'Admin Post - Récupération Matériel': {
-              select: {
-                name: 'Fait',
-              },
-            },
           },
         });
         updatedCount++;
