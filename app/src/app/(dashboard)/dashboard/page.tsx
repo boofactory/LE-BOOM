@@ -144,11 +144,11 @@ export default function DashboardPage() {
     switch (activeTab) {
       case 'current':
         // En cours: événements des 2 prochaines semaines, pas à l'atelier
-        passesTabFilter = !isAtelier && eventDate && eventDate <= twoWeeksFromNow;
+        passesTabFilter = !isAtelier && !!eventDate && eventDate <= twoWeeksFromNow;
         break;
       case 'upcoming':
         // À venir: événements après 2 semaines, pas à l'atelier
-        passesTabFilter = !isAtelier && eventDate && eventDate > twoWeeksFromNow;
+        passesTabFilter = !isAtelier && !!eventDate && eventDate > twoWeeksFromNow;
         break;
       case 'history':
         // Historique: événements à l'atelier uniquement

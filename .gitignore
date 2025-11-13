@@ -64,3 +64,8 @@ Desktop.ini
 # Uploads & Data
 app/public/uploads/*
 !app/public/uploads/.gitkeep
+
+# Claude Code credentials (NEVER commit!)
+.claude/credentials.md
+.claude/*.json
+.claude/*.txt

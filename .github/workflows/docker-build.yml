@@ -56,13 +56,9 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Temporarily disable cache to force clean build
-          # cache-from: type=gha
-          # cache-to: type=gha,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           platforms: linux/amd64
-          # Add build args for debugging
-          build-args: |
-            BUILDKIT_PROGRESS=plain
 
       - name: Trigger Portainer Webhook (Production)
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
