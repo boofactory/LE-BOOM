@@ -128,7 +128,7 @@ export default function DashboardPage() {
   const availableYears = Array.from(new Set(
     events
       .map(e => e.event_date ? new Date(e.event_date).getFullYear() : null)
-      .filter(year => year !== null)
+      .filter((year): year is number => year !== null)
   )).sort((a, b) => b - a);
 
   // Filter events by tab
