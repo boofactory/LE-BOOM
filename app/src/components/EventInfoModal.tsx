@@ -47,7 +47,7 @@ export default function EventInfoModal({ event, isOpen, onClose, onOpenStatusMod
   };
 
   const location = getNotionValue(['lieu de l\'évenement', 'Lieu', 'Location']);
-  const prestations = getNotionValue(['Prestations', 'Services'], 'multi_select');
+  const prestations = getNotionValue(['Prestations', 'Services']);
   const installationTime = getNotionValue(['Event - Heure installation', 'Heure installation']);
   const installationStaff = getNotionValue(['Staff Installation', 'Installation Staff'], 'multi_select');
   const recuperationTime = getNotionValue(['Event - Heure Récupération', 'Heure Récupération']);
@@ -55,18 +55,34 @@ export default function EventInfoModal({ event, isOpen, onClose, onOpenStatusMod
   const importantInfo = getNotionValue(['Info importante', 'Important']);
 
   // Contact info
-  const contactName = getNotionValue(['Contact sur place', 'Contact', 'Nom contact']);
-  const contactPhone = getNotionValue(['Téléphone contact', 'Contact téléphone', 'Tel contact'], 'phone');
+  const contactName = getNotionValue(['Event - Contact sur place', 'Contact sur place', 'Contact']);
+  const contactPhone = getNotionValue(['Event - Telephone contact', 'Téléphone contact'], 'phone');
 
   // Client info
-  const clientAddress = getNotionValue(['Adresse client', 'Client adresse', 'Adresse']);
-  const clientPhone = getNotionValue(['Téléphone client', 'Client téléphone', 'Tel client'], 'phone');
-  const clientEmail = getNotionValue(['Email client', 'Client email', 'Email'], 'email');
+  const clientPhone = getNotionValue(['Téléphone'], 'phone');
+  const clientEmail = getNotionValue(['E-mail'], 'email');
+  const clientPrenom = getNotionValue(['Prénom']);
+  const clientNom = getNotionValue(['Nom']);
+  const clientAddress = getNotionValue(['Adresse de facturation', 'Adresse']);
 
   // Additional info
-  const materiels = getNotionValue(['Liste matériel', 'Matériel', 'BOO'], 'multi_select');
-  const wifiInfo = getNotionValue(['Informations WiFi', 'WiFi', 'Wifi']);
-  const installationNotes = getNotionValue(['Informations Installation', 'Info Installation', 'Notes installation']);
+  const materiels = getNotionValue(['Event - Liste matériel', 'Liste matériel']);
+  const wifiInfo = getNotionValue(['Event -Wifi', 'WiFi']);
+  const installationNotes = getNotionValue(['Info installation']);
+  const infosComplementaires = getNotionValue(['Infos Complémentaires', 'Info Complémentaire']);
+
+  // Photoboo info
+  const photobooFormule = getNotionValue(['Photoboo : Formule'], 'select');
+  const photobooJours = getNotionValue(['Photoboo : Jours de location'], 'select');
+  const photobooFond = getNotionValue(['Photoboo - Fond'], 'select');
+  const photobooCadres = getNotionValue(['Photoboo : Cadres'], 'select');
+  const photobooCadreChoisi = getNotionValue(['Photoboo : Cadre choisi']);
+  const photobooInfos = getNotionValue(['Photoboo : Info Complémentaire']);
+
+  // Prix
+  const prixPrestations = notionData['Prix Prestations']?.number;
+  const prixLivraison = notionData['Prix Livraison/Expédition']?.number;
+  const prixTotal = notionData['Prix Total']?.number;
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
@@ -199,7 +215,7 @@ export default function EventInfoModal({ event, isOpen, onClose, onOpenStatusMod
             )}
 
             {/* Prestations */}
-            {prestations && prestations.length > 0 && (
+            {prestations && (
               <div className="p-4 bg-gray-50 rounded-lg">
                 <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                   <svg className="w-4 h-4 text-coral" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -209,27 +225,40 @@ export default function EventInfoModal({ event, isOpen, onClose, onOpenStatusMod
                   </svg>
                   Prestations
                 </h4>
-                <p className="text-sm text-gray-600">{prestations.join(' • ')}</p>
+                <p className="text-sm text-gray-600 whitespace-pre-wrap">{prestations}</p>
               </div>
             )}
 
             {/* Client Info */}
-            {(clientAddress || clientPhone || clientEmail) && (
+            {(clientNom || clientPrenom || clientPhone || clientEmail || clientAddress) && (
               <div className="p-4 bg-gray-50 rounded-lg md:col-span-2">
-                <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                   <svg className="w-4 h-4 text-coral" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                     <circle cx="12" cy="7" r="4"/>
                   </svg>
                   Informations client
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                  {clientAddress && <p className="text-sm text-gray-600">📍 {clientAddress}</p>}
-                  {clientPhone && (
-                    <a href={`tel:${clientPhone}`} className="text-sm text-skyblue hover:underline">📞 {clientPhone}</a>
+                <div className="space-y-2">
+                  {(clientPrenom || clientNom) && (
+                    <p className="text-sm text-gray-800 font-medium">
+                      {[clientPrenom, clientNom].filter(Boolean).join(' ')}
+                    </p>
                   )}
-                  {clientEmail && (
-                    <a href={`mailto:${clientEmail}`} className="text-sm text-skyblue hover:underline">📧 {clientEmail}</a>
+                  <div className="flex flex-wrap gap-3">
+                    {clientPhone && (
+                      <a href={`tel:${clientPhone}`} className="text-sm text-skyblue hover:underline flex items-center gap-1">
+                        📞 {clientPhone}
+                      </a>
+                    )}
+                    {clientEmail && (
+                      <a href={`mailto:${clientEmail}`} className="text-sm text-skyblue hover:underline flex items-center gap-1">
+                        📧 {clientEmail}
+                      </a>
+                    )}
+                  </div>
+                  {clientAddress && (
+                    <p className="text-sm text-gray-600 mt-2">📍 {clientAddress}</p>
                   )}
                 </div>
               </div>
@@ -283,6 +312,73 @@ export default function EventInfoModal({ event, isOpen, onClose, onOpenStatusMod
                 <p className="text-sm text-gray-600 whitespace-pre-wrap">{installationNotes}</p>
               </div>
             )}
+
+            {/* Photoboo Details */}
+            {(photobooFormule || photobooJours || photobooFond || photobooCadres || photobooCadreChoisi || photobooInfos) && (
+              <div className="p-4 bg-purple-50 rounded-lg md:col-span-2">
+                <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <svg className="w-4 h-4 text-purple-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                  </svg>
+                  📸 Configuration Photoboo
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {photobooFormule && (
+                    <div>
+                      <span className="text-xs text-gray-500 uppercase">Formule</span>
+                      <p className="text-sm text-gray-800 font-medium">{photobooFormule}</p>
+                    </div>
+                  )}
+                  {photobooJours && (
+                    <div>
+                      <span className="text-xs text-gray-500 uppercase">Jours de location</span>
+                      <p className="text-sm text-gray-800 font-medium">{photobooJours}</p>
+                    </div>
+                  )}
+                  {photobooFond && (
+                    <div>
+                      <span className="text-xs text-gray-500 uppercase">Fond</span>
+                      <p className="text-sm text-gray-800 font-medium">{photobooFond}</p>
+                    </div>
+                  )}
+                  {photobooCadres && (
+                    <div>
+                      <span className="text-xs text-gray-500 uppercase">Cadres</span>
+                      <p className="text-sm text-gray-800 font-medium">{photobooCadres}</p>
+                    </div>
+                  )}
+                  {photobooCadreChoisi && (
+                    <div className="sm:col-span-2">
+                      <span className="text-xs text-gray-500 uppercase">Cadre choisi</span>
+                      <p className="text-sm text-gray-800 font-medium">{photobooCadreChoisi}</p>
+                    </div>
+                  )}
+                  {photobooInfos && (
+                    <div className="sm:col-span-2">
+                      <span className="text-xs text-gray-500 uppercase">Informations complémentaires</span>
+                      <p className="text-sm text-gray-600 whitespace-pre-wrap">{photobooInfos}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Infos Complémentaires */}
+            {infosComplementaires && (
+              <div className="p-4 bg-blue-50 rounded-lg md:col-span-2">
+                <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <svg className="w-4 h-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="16" x2="12" y2="12"/>
+                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                  </svg>
+                  ℹ️ Informations complémentaires
+                </h4>
+                <p className="text-sm text-gray-600 whitespace-pre-wrap">{infosComplementaires}</p>
+              </div>
+            )}
           </div>
 
           {/* Staff Section */}
@@ -321,6 +417,33 @@ export default function EventInfoModal({ event, isOpen, onClose, onOpenStatusMod
                       )}
                     </div>
                     <p className="text-sm text-gray-600">{formatStaffList(recuperationStaff)}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Pricing Section */}
+          {(prixPrestations || prixLivraison || prixTotal) && (
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">💰 Tarification</h3>
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-5 space-y-3">
+                {prixPrestations && (
+                  <div className="flex justify-between items-center pb-2 border-b border-green-200">
+                    <span className="text-sm text-gray-600">Prix prestations</span>
+                    <span className="text-base font-semibold text-gray-900">{prixPrestations.toFixed(2)} CHF</span>
+                  </div>
+                )}
+                {prixLivraison && (
+                  <div className="flex justify-between items-center pb-2 border-b border-green-200">
+                    <span className="text-sm text-gray-600">Prix livraison/expédition</span>
+                    <span className="text-base font-semibold text-gray-900">{prixLivraison.toFixed(2)} CHF</span>
+                  </div>
+                )}
+                {prixTotal && (
+                  <div className="flex justify-between items-center pt-2">
+                    <span className="text-base font-bold text-gray-900">Total</span>
+                    <span className="text-xl font-bold text-green-700">{prixTotal.toFixed(2)} CHF</span>
                   </div>
                 )}
               </div>
