@@ -1,6 +1,6 @@
 'use client';
 
-import EventCard from '@/components/EventCard';
+import EventCard from '@/components/EventCardV2';
 import EventInfoModal from '@/components/EventInfoModal';
 import StatusChangeModal from '@/components/StatusChangeModal';
 import { useEffect, useState } from 'react';

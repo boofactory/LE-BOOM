@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from '@/hooks/useToast';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -86,18 +87,18 @@ export default function StatusChangeModal({ event, isOpen, onClose, onStatusUpda
       });
 
       if (response.ok) {
-        alert(mode === 'installation' ? '✅ Installation confirmée !' : '✅ Retour confirmé !');
-        if (mode === 'return' && sendEmail) {
-          alert('📧 Email envoyé au client');
-        }
+        toast.success(
+          mode === 'installation' ? 'Installation confirmée !' : 'Retour confirmé !',
+          mode === 'return' && sendEmail ? 'Email envoyé au client' : undefined
+        );
         onStatusUpdate?.();
         onClose();
       } else {
-        alert('❌ Erreur lors de la confirmation');
+        toast.error('Erreur lors de la confirmation', 'Veuillez réessayer');
       }
     } catch (error) {
       console.error('Error submitting status:', error);
-      alert('❌ Erreur réseau');
+      toast.error('Erreur réseau', 'Vérifiez votre connexion');
     } finally {
       setIsSubmitting(false);
     }
