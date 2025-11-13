@@ -6,6 +6,7 @@ interface EventCardProps {
   event: any;
   onOpenDetails?: (event: any) => void;
   onOpenStatus?: (event: any, mode: 'installation' | 'return') => void;
+  hideStatusBadge?: boolean;
 }
 
 function formatDate(dateString: string | null | undefined): string {
@@ -45,7 +46,7 @@ function getNotionValue(notionData: any, fieldNames: string[]): any {
   return null;
 }
 
-export default function EventCard({ event, onOpenDetails, onOpenStatus }: EventCardProps) {
+export default function EventCard({ event, onOpenDetails, onOpenStatus, hideStatusBadge = false }: EventCardProps) {
   // Extract data from event (snake_case from API)
   const clientName = event.client_name || 'Sans titre';
   const eventType = event.event_type || null;
@@ -109,11 +110,13 @@ export default function EventCard({ event, onOpenDetails, onOpenStatus }: EventC
       {/* Header */}
       <div className="bg-gradient-to-r from-coral to-coral-light p-4 text-white">
         {/* Status Badge */}
-        <div className="mb-3">
-          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusBadge.color}`}>
-            {statusBadge.text}
-          </span>
-        </div>
+        {!hideStatusBadge && (
+          <div className="mb-3">
+            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusBadge.color}`}>
+              {statusBadge.text}
+            </span>
+          </div>
+        )}
 
         <div className="mb-2">
           <h2 className="font-bold text-xl truncate">

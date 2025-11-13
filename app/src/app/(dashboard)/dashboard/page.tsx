@@ -5,7 +5,7 @@ import EventInfoModal from '@/components/EventInfoModal';
 import StatusChangeModal from '@/components/StatusChangeModal';
 import { useEffect, useState } from 'react';
 
-type TabType = 'upcoming' | 'installed' | 'history';
+type TabType = 'current' | 'upcoming' | 'history';
 
 export default function DashboardPage() {
   const [events, setEvents] = useState<any[]>([]);
@@ -14,7 +14,11 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
-  const [activeTab, setActiveTab] = useState<TabType>('upcoming');
+  const [activeTab, setActiveTab] = useState<TabType>('current');
+
+  // History tab filters
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedYear, setSelectedYear] = useState<string>('all');
 
   // Modal states
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
@@ -120,35 +124,95 @@ export default function DashboardPage() {
     return lastUpdate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   };
 
+  // Get unique years for filter
+  const availableYears = Array.from(new Set(
+    events
+      .map(e => e.event_date ? new Date(e.event_date).getFullYear() : null)
+      .filter(year => year !== null)
+  )).sort((a, b) => b - a);
+
   // Filter events by tab
   const filteredEvents = events.filter((event) => {
     const status = (event.installation_status || '').toLowerCase();
-    const isInstalled = status.includes('installé');
+    const isAtelier = status.includes('atelier');
     const eventDate = event.event_date ? new Date(event.event_date) : null;
-    const isPastEvent = eventDate && eventDate < new Date();
+    const today = new Date();
+    const twoWeeksFromNow = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000);
 
+    // Base tab filtering
+    let passesTabFilter = false;
     switch (activeTab) {
+      case 'current':
+        // En cours: événements des 2 prochaines semaines, pas à l'atelier
+        passesTabFilter = !isAtelier && eventDate && eventDate <= twoWeeksFromNow;
+        break;
       case 'upcoming':
-        // À venir: pas encore installé (statut vide ou pas "Installé")
-        return !isInstalled;
-      case 'installed':
-        // Installés: statut "Installé"
-        return isInstalled;
+        // À venir: événements après 2 semaines, pas à l'atelier
+        passesTabFilter = !isAtelier && eventDate && eventDate > twoWeeksFromNow;
+        break;
       case 'history':
-        // Historique: événements passés (date < aujourd'hui)
-        return isPastEvent;
+        // Historique: événements à l'atelier uniquement
+        passesTabFilter = isAtelier;
+        break;
       default:
-        return true;
+        passesTabFilter = true;
     }
+
+    if (!passesTabFilter) return false;
+
+    // Additional filtering for history tab
+    if (activeTab === 'history') {
+      // Search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesSearch =
+          event.client_name?.toLowerCase().includes(query) ||
+          event.event_type?.toLowerCase().includes(query) ||
+          event.photomaton?.toLowerCase().includes(query) ||
+          event.album_name?.toLowerCase().includes(query);
+        if (!matchesSearch) return false;
+      }
+
+      // Year filter
+      if (selectedYear !== 'all' && eventDate) {
+        const eventYear = eventDate.getFullYear().toString();
+        if (eventYear !== selectedYear) return false;
+      }
+    }
+
+    return true;
   });
 
   const tabs = [
-    { id: 'upcoming' as TabType, label: '📅 À venir', count: events.filter(e => !(e.installation_status || '').toLowerCase().includes('installé')).length },
-    { id: 'installed' as TabType, label: '✅ Installés', count: events.filter(e => (e.installation_status || '').toLowerCase().includes('installé')).length },
-    { id: 'history' as TabType, label: '📦 Historique', count: events.filter(e => {
-      const eventDate = e.event_date ? new Date(e.event_date) : null;
-      return eventDate && eventDate < new Date();
-    }).length },
+    {
+      id: 'current' as TabType,
+      label: '🎯 En cours',
+      count: events.filter(e => {
+        const status = (e.installation_status || '').toLowerCase();
+        const isAtelier = status.includes('atelier');
+        const eventDate = e.event_date ? new Date(e.event_date) : null;
+        const today = new Date();
+        const twoWeeksFromNow = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000);
+        return !isAtelier && eventDate && eventDate <= twoWeeksFromNow;
+      }).length
+    },
+    {
+      id: 'upcoming' as TabType,
+      label: '📅 À venir',
+      count: events.filter(e => {
+        const status = (e.installation_status || '').toLowerCase();
+        const isAtelier = status.includes('atelier');
+        const eventDate = e.event_date ? new Date(e.event_date) : null;
+        const today = new Date();
+        const twoWeeksFromNow = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000);
+        return !isAtelier && eventDate && eventDate > twoWeeksFromNow;
+      }).length
+    },
+    {
+      id: 'history' as TabType,
+      label: '📦 Historique',
+      count: events.filter(e => (e.installation_status || '').toLowerCase().includes('atelier')).length
+    },
   ];
 
   return (
@@ -195,6 +259,29 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Search and Filter Bar for History Tab */}
+      {activeTab === 'history' && (
+        <div className="mb-6 flex gap-4">
+          <input
+            type="text"
+            placeholder="Rechercher (client, type, photomaton, album)..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent"
+          />
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent"
+          >
+            <option value="all">Toutes les années</option>
+            {availableYears.map(year => (
+              <option key={year} value={year}>{year}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {error && (
         <div className="card bg-red-50 border border-red-200 text-red-800 mb-6 p-4">
           <p className="font-medium">Erreur</p>
@@ -229,6 +316,7 @@ export default function DashboardPage() {
               event={event}
               onOpenDetails={handleOpenInfoModal}
               onOpenStatus={handleOpenStatusModal}
+              hideStatusBadge={activeTab === 'history'}
             />
           ))}
         </div>
