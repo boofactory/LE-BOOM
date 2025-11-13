@@ -47,7 +47,8 @@ export default function EventInfoModal({ event, isOpen, onClose, onOpenStatusMod
   };
 
   const location = getNotionValue(['lieu de l\'évenement', 'Lieu', 'Location']);
-  const prestations = getNotionValue(['Prestations', 'Services']);
+  const prestationsRaw = getNotionValue(['Prestations', 'Services']);
+  const prestations = prestationsRaw ? prestationsRaw.replace(/^Presta : /, '') : null;
   const installationTime = getNotionValue(['Event - Heure installation', 'Heure installation']);
   const installationStaff = getNotionValue(['Staff Installation', 'Installation Staff'], 'multi_select');
   const recuperationTime = getNotionValue(['Event - Heure Récupération', 'Heure Récupération']);
@@ -95,7 +96,9 @@ export default function EventInfoModal({ event, isOpen, onClose, onOpenStatusMod
 
   const formatStaffList = (staff: any) => {
     if (Array.isArray(staff)) {
-      return staff.join(' • ');
+      return staff
+        .map((name: string) => name.replace(/^(Inst|Récup) : /, ''))
+        .join(' • ');
     }
     return staff || '-';
   };
