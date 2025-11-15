@@ -100,7 +100,9 @@ export default function EventTimelineCard({
   const location = getNotionValue(notionData, ['lieu de l\'évenement', 'Lieu', 'Location']);
   const installationTime = getNotionValue(notionData, ['Event - Heure installation', 'Heure installation']);
   const installationStaff = getNotionValue(notionData, ['Staff Installation', 'Installation Staff']);
+  const returnStaff = getNotionValue(notionData, ['Staff Récupération', 'Staff Return']);
   const prestations = getNotionValue(notionData, ['Prestations', 'Services']);
+  const importantInfo = getNotionValue(notionData, ['Info importante', 'Info Importante', 'Important']);
 
   const formatStaffList = (staff: any) => {
     if (Array.isArray(staff)) {
@@ -197,17 +199,19 @@ export default function EventTimelineCard({
           </div>
 
           {/* Event Title */}
-          <h3 className="text-lg font-bold text-neutral-900 mb-1 leading-tight">
+          <h3 className="text-lg font-bold text-neutral-900 mb-3 leading-tight">
             {eventTitle}
           </h3>
 
-          {/* Time */}
-          {timeDisplay && (
-            <div className="flex items-center gap-1.5 mb-3">
-              <svg className="w-3.5 h-3.5 text-neutral-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
-              </svg>
-              <span className="text-sm text-neutral-600 font-medium">{timeDisplay}</span>
+          {/* Info importante */}
+          {importantInfo && (
+            <div className="mb-3 p-2 bg-status-warning/10 border-l-4 border-status-warning rounded-r-lg">
+              <div className="flex items-start gap-2">
+                <svg className="w-4 h-4 text-status-warning flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+                </svg>
+                <span className="text-sm text-status-warning font-semibold">{importantInfo}</span>
+              </div>
             </div>
           )}
 
@@ -221,13 +225,29 @@ export default function EventTimelineCard({
             </div>
           )}
 
-          {/* Staff */}
+          {/* Staff Installation */}
           {installationStaff && (
             <div className="flex items-start gap-2 mb-2">
-              <svg className="w-4 h-4 text-neutral-500 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+              <svg className="w-4 h-4 text-status-success flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
               </svg>
-              <span className="text-sm text-neutral-600">{formatStaffList(installationStaff)}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-neutral-500 font-medium">Installation</p>
+                <p className="text-sm text-neutral-700">{formatStaffList(installationStaff)}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Staff Récupération */}
+          {returnStaff && (
+            <div className="flex items-start gap-2 mb-2">
+              <svg className="w-4 h-4 text-brand-green flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+              </svg>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-neutral-500 font-medium">Récupération</p>
+                <p className="text-sm text-neutral-700">{formatStaffList(returnStaff)}</p>
+              </div>
             </div>
           )}
 
