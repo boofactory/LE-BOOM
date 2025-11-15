@@ -21,6 +21,9 @@ interface GroupedEvents {
   today: any[];
   tomorrow: any[];
   thisWeek: any[];
+  nextWeek: any[];
+  thisMonth: any[];
+  nextMonth: any[];
   later: any[];
   history: any[];
 }
@@ -44,13 +47,33 @@ export default function TimelineView({
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const tomorrowStart = new Date(todayStart);
     tomorrowStart.setDate(tomorrowStart.getDate() + 1);
-    const weekEnd = new Date(todayStart);
-    weekEnd.setDate(weekEnd.getDate() + 7);
+    const dayAfterTomorrow = new Date(tomorrowStart);
+    dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 1);
+
+    // This week = jusqu'à dimanche
+    const thisSunday = new Date(todayStart);
+    thisSunday.setDate(thisSunday.getDate() + (7 - thisSunday.getDay()));
+
+    // Next week = lundi prochain à dimanche prochain
+    const nextMonday = new Date(thisSunday);
+    nextMonday.setDate(nextMonday.getDate() + 1);
+    const nextSunday = new Date(nextMonday);
+    nextSunday.setDate(nextSunday.getDate() + 6);
+
+    // This month = jusqu'à la fin du mois
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    // Next month = mois prochain
+    const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const endOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0);
 
     const grouped: GroupedEvents = {
       today: [],
       tomorrow: [],
       thisWeek: [],
+      nextWeek: [],
+      thisMonth: [],
+      nextMonth: [],
       later: [],
       history: [],
     };
@@ -65,10 +88,16 @@ export default function TimelineView({
       } else if (eventDate) {
         if (eventDate >= todayStart && eventDate < tomorrowStart) {
           grouped.today.push(event);
-        } else if (eventDate >= tomorrowStart && eventDate < new Date(tomorrowStart.getTime() + 24 * 60 * 60 * 1000)) {
+        } else if (eventDate >= tomorrowStart && eventDate < dayAfterTomorrow) {
           grouped.tomorrow.push(event);
-        } else if (eventDate >= tomorrowStart && eventDate < weekEnd) {
+        } else if (eventDate >= dayAfterTomorrow && eventDate <= thisSunday) {
           grouped.thisWeek.push(event);
+        } else if (eventDate > thisSunday && eventDate <= nextSunday) {
+          grouped.nextWeek.push(event);
+        } else if (eventDate > nextSunday && eventDate <= endOfMonth) {
+          grouped.thisMonth.push(event);
+        } else if (eventDate > endOfMonth && eventDate <= endOfNextMonth) {
+          grouped.nextMonth.push(event);
         } else {
           grouped.later.push(event);
         }
@@ -85,6 +114,9 @@ export default function TimelineView({
     grouped.today.sort(sortByDate);
     grouped.tomorrow.sort(sortByDate);
     grouped.thisWeek.sort(sortByDate);
+    grouped.nextWeek.sort(sortByDate);
+    grouped.thisMonth.sort(sortByDate);
+    grouped.nextMonth.sort(sortByDate);
     grouped.later.sort(sortByDate);
     grouped.history.sort((a, b) => sortByDate(b, a)); // Reverse for history
 
@@ -104,6 +136,24 @@ export default function TimelineView({
   };
 
   const grouped = groupEventsByDate();
+
+  // Group history by month
+  const groupHistoryByMonth = () => {
+    const byMonth: { [key: string]: any[] } = {};
+
+    grouped.history.forEach((event) => {
+      const eventDate = event.event_date ? new Date(event.event_date) : null;
+      if (eventDate) {
+        const monthKey = eventDate.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long' });
+        if (!byMonth[monthKey]) {
+          byMonth[monthKey] = [];
+        }
+        byMonth[monthKey].push(event);
+      }
+    });
+
+    return byMonth;
+  };
 
   // Filter history events
   const filteredHistory = grouped.history.filter((event) => {
@@ -129,6 +179,8 @@ export default function TimelineView({
 
     return true;
   });
+
+  const historyByMonth = groupHistoryByMonth();
 
   // Get available years for filter
   const availableYears = Array.from(new Set(
@@ -240,6 +292,63 @@ export default function TimelineView({
             ))}
           </DateSection>
 
+          {/* Next Week */}
+          <DateSection
+            title="Semaine prochaine"
+            emoji="🗓️"
+            count={grouped.nextWeek.length}
+            defaultExpanded={false}
+            color="neutral"
+          >
+            {grouped.nextWeek.map((event) => (
+              <EventTimelineCard
+                key={event.id}
+                event={event}
+                onOpenDetails={onOpenDetails}
+                onOpenStatus={onOpenStatus}
+                showTimeline={true}
+              />
+            ))}
+          </DateSection>
+
+          {/* This Month */}
+          <DateSection
+            title="Ce mois-ci"
+            emoji="📅"
+            count={grouped.thisMonth.length}
+            defaultExpanded={false}
+            color="neutral"
+          >
+            {grouped.thisMonth.map((event) => (
+              <EventTimelineCard
+                key={event.id}
+                event={event}
+                onOpenDetails={onOpenDetails}
+                onOpenStatus={onOpenStatus}
+                showTimeline={true}
+              />
+            ))}
+          </DateSection>
+
+          {/* Next Month */}
+          <DateSection
+            title="Mois prochain"
+            emoji="📆"
+            count={grouped.nextMonth.length}
+            defaultExpanded={false}
+            color="neutral"
+          >
+            {grouped.nextMonth.map((event) => (
+              <EventTimelineCard
+                key={event.id}
+                event={event}
+                onOpenDetails={onOpenDetails}
+                onOpenStatus={onOpenStatus}
+                showTimeline={true}
+              />
+            ))}
+          </DateSection>
+
           {/* Later */}
           <DateSection
             title="Plus tard"
@@ -260,7 +369,7 @@ export default function TimelineView({
           </DateSection>
 
           {/* Empty state */}
-          {grouped.today.length === 0 && grouped.tomorrow.length === 0 && grouped.thisWeek.length === 0 && grouped.later.length === 0 && (
+          {grouped.today.length === 0 && grouped.tomorrow.length === 0 && grouped.thisWeek.length === 0 && grouped.nextWeek.length === 0 && grouped.thisMonth.length === 0 && grouped.nextMonth.length === 0 && grouped.later.length === 0 && (
             <div className="text-center py-12 bg-neutral-50 rounded-xl">
               <div className="text-6xl mb-4">📭</div>
               <p className="text-neutral-600 font-medium mb-2">Aucun événement à venir</p>
@@ -296,18 +405,35 @@ export default function TimelineView({
             </select>
           </div>
 
-          {/* History List */}
-          <div className="space-y-4">
-            {filteredHistory.length > 0 ? (
-              filteredHistory.map((event) => (
-                <EventTimelineCard
-                  key={event.id}
-                  event={event}
-                  onOpenDetails={onOpenDetails}
-                  onOpenStatus={onOpenStatus}
-                  showTimeline={false}
-                />
-              ))
+          {/* History List - Grouped by Month */}
+          <div className="space-y-6">
+            {Object.keys(historyByMonth).length > 0 ? (
+              Object.entries(historyByMonth)
+                .filter(([, events]) => events.some(e => filteredHistory.includes(e)))
+                .map(([monthKey, events]) => {
+                  const filteredMonthEvents = events.filter(e => filteredHistory.includes(e));
+                  return (
+                    <DateSection
+                      key={monthKey}
+                      title={monthKey}
+                      emoji="📦"
+                      count={filteredMonthEvents.length}
+                      defaultExpanded={false}
+                      color="neutral"
+                    >
+                      {filteredMonthEvents.map((event) => (
+                        <EventTimelineCard
+                          key={event.id}
+                          event={event}
+                          onOpenDetails={onOpenDetails}
+                          onOpenStatus={onOpenStatus}
+                          showTimeline={false}
+                          isHistory={true}
+                        />
+                      ))}
+                    </DateSection>
+                  );
+                })
             ) : (
               <div className="text-center py-12 bg-neutral-50 rounded-xl">
                 <div className="text-6xl mb-4">🔍</div>
