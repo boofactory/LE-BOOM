@@ -67,5 +67,6 @@ app/public/uploads/*
 
 # Claude Code credentials (NEVER commit!)
 .claude/credentials.md
+.claude/infomaniak-credentials.md
 .claude/*.json
 .claude/*.txt
