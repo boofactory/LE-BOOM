@@ -14,6 +14,11 @@ function LoginForm() {
 
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
 
+  const handleInfomaniakLogin = async () => {
+    setLoading(true);
+    await signIn('infomaniak', { callbackUrl });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -51,6 +56,34 @@ function LoginForm() {
           <h1 className="text-4xl font-bold text-dark mb-2">LE BOOM</h1>
           <p className="text-gray-600">Connexion à l'application</p>
         </div>
+
+        {/* SSO Button */}
+        {process.env.NEXT_PUBLIC_INFOMANIAK_ENABLED === 'true' && (
+          <button
+            onClick={handleInfomaniakLogin}
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white border-2 border-brand-coral hover:bg-brand-coral/5 active:scale-95 text-brand-dark rounded-xl transition-all duration-200 font-semibold shadow-sm mb-6"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#D56852" stroke="#D56852" strokeWidth="2" strokeLinejoin="round"/>
+              <path d="M2 17L12 22L22 17" stroke="#D56852" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M2 12L12 17L22 12" stroke="#D56852" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Se connecter avec Infomaniak
+          </button>
+        )}
+
+        {/* Separator */}
+        {process.env.NEXT_PUBLIC_INFOMANIAK_ENABLED === 'true' && (
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-neutral-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-3 bg-white text-neutral-600">Ou continuer avec</span>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (

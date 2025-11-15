@@ -1,5 +1,6 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import { OAuthConfig } from 'next-auth/providers/oauth';
 import bcrypt from 'bcrypt';
 import { prisma } from '@/lib/prisma';
 import { getOrCreateNextAuthSecret } from '@/lib/db-init';
@@ -16,8 +17,45 @@ async function getNextAuthSecret(): Promise<string> {
   return cachedSecret;
 }
 
+// Infomaniak OAuth Provider
+function InfomaniakProvider(options: { clientId: string; clientSecret: string }): OAuthConfig<any> {
+  return {
+    id: "infomaniak",
+    name: "Infomaniak",
+    type: "oauth",
+    wellKnown: undefined,
+    authorization: {
+      url: "https://login.infomaniak.com/authorize",
+      params: {
+        scope: "openid email profile",
+        response_type: "code",
+      },
+    },
+    token: "https://login.infomaniak.com/token",
+    userinfo: "https://login.infomaniak.com/oauth2/userinfo",
+    profile(profile) {
+      return {
+        id: profile.sub,
+        name: profile.name || profile.given_name + ' ' + profile.family_name,
+        email: profile.email,
+        image: profile.picture,
+      };
+    },
+    clientId: options.clientId,
+    clientSecret: options.clientSecret,
+  };
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
+    // Infomaniak OAuth (if credentials are configured)
+    ...(process.env.INFOMANIAK_CLIENT_ID && process.env.INFOMANIAK_CLIENT_SECRET
+      ? [InfomaniakProvider({
+          clientId: process.env.INFOMANIAK_CLIENT_ID,
+          clientSecret: process.env.INFOMANIAK_CLIENT_SECRET,
+        })]
+      : []),
+    // Credentials Provider (fallback)
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
