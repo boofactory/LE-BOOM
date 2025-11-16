@@ -125,6 +125,48 @@ export async function buildAuthOptions(): Promise<NextAuthOptions> {
       signIn: '/login',
     },
     callbacks: {
+      async signIn({ user, account, profile }) {
+        // Pour l'authentification locale (credentials), toujours autoriser
+        if (account?.provider === 'credentials') {
+          return true;
+        }
+
+        // Pour OAuth (Infomaniak), créer ou récupérer l'utilisateur
+        if (account?.provider === 'infomaniak' && user.email) {
+          try {
+            // Vérifier si l'utilisateur existe déjà
+            let dbUser = await prisma.user.findUnique({
+              where: { email: user.email },
+            });
+
+            // Si l'utilisateur n'existe pas, le créer
+            if (!dbUser) {
+              console.log('[AUTH] Creating new user from Infomaniak:', user.email);
+              dbUser = await prisma.user.create({
+                data: {
+                  email: user.email,
+                  name: user.name || user.email.split('@')[0],
+                  username: user.email.split('@')[0], // Générer username depuis email
+                  role: 'USER', // Role par défaut
+                  // Pas de password car auth OAuth
+                },
+              });
+              console.log('[AUTH] User created successfully:', dbUser.id);
+            } else {
+              console.log('[AUTH] Existing user found:', dbUser.id);
+            }
+
+            // Ajouter le role au user object pour le callback jwt
+            (user as any).role = dbUser.role;
+            return true;
+          } catch (error) {
+            console.error('[AUTH] Error in signIn callback:', error);
+            return false;
+          }
+        }
+
+        return true;
+      },
       async jwt({ token, user }) {
         if (user) {
           token.role = (user as any).role;
