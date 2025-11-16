@@ -125,6 +125,36 @@ export async function buildAuthOptions(): Promise<NextAuthOptions> {
       signIn: '/login',
     },
     callbacks: {
+      async signIn({ user, account }) {
+        // Local auth always allowed
+        if (account?.provider === 'credentials') {
+          return true;
+        }
+
+        // OAuth: verify user exists in DB
+        if (account?.provider === 'infomaniak' && user.email) {
+          try {
+            const dbUser = await prisma.user.findUnique({
+              where: { email: user.email },
+            });
+
+            if (!dbUser) {
+              console.log('[AUTH] OAuth user not found in DB:', user.email);
+              return false;
+            }
+
+            // Load role from DB
+            (user as any).role = dbUser.role.toLowerCase();
+            console.log('[AUTH] OAuth user verified:', dbUser.email, 'role:', dbUser.role);
+            return true;
+          } catch (error) {
+            console.error('[AUTH] Error in signIn callback:', error);
+            return false;
+          }
+        }
+
+        return true;
+      },
       async jwt({ token, user }) {
         if (user) {
           token.role = (user as any).role;
