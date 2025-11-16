@@ -1,7 +1,7 @@
 'use client';
 
 import { signIn } from 'next-auth/react';
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 function LoginForm() {
@@ -11,8 +11,21 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [infomaniakEnabled, setInfomaniakEnabled] = useState(false);
 
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+
+  // Charger le statut Infomaniak au chargement
+  useEffect(() => {
+    fetch('/api/auth/infomaniak/status')
+      .then(res => res.json())
+      .then(data => {
+        if (data.enabled) {
+          setInfomaniakEnabled(true);
+        }
+      })
+      .catch(err => console.error('Failed to load Infomaniak status:', err));
+  }, []);
 
   const handleInfomaniakLogin = async () => {
     setLoading(true);
@@ -58,7 +71,7 @@ function LoginForm() {
         </div>
 
         {/* SSO Button */}
-        {process.env.NEXT_PUBLIC_INFOMANIAK_ENABLED === 'true' && (
+        {infomaniakEnabled && (
           <button
             onClick={handleInfomaniakLogin}
             disabled={loading}
@@ -74,7 +87,7 @@ function LoginForm() {
         )}
 
         {/* Separator */}
-        {process.env.NEXT_PUBLIC_INFOMANIAK_ENABLED === 'true' && (
+        {infomaniakEnabled && (
           <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-neutral-300"></div>

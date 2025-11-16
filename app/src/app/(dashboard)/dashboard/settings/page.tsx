@@ -23,6 +23,21 @@ const SETTING_KEYS = [
     encrypted: false,
   },
   {
+    key: 'INFOMANIAK_CLIENT_ID',
+    description: 'Client ID de l\'application OAuth2 Infomaniak',
+    encrypted: false,
+  },
+  {
+    key: 'INFOMANIAK_CLIENT_SECRET',
+    description: 'Client Secret de l\'application OAuth2 Infomaniak',
+    encrypted: true,
+  },
+  {
+    key: 'INFOMANIAK_ENABLED',
+    description: 'Activer l\'authentification SSO Infomaniak (true/false)',
+    encrypted: false,
+  },
+  {
     key: 'ADMIN_PASSWORD',
     description: 'Mot de passe administrateur (sera hashé automatiquement)',
     encrypted: true,
@@ -290,6 +305,18 @@ export default function SettingsPage() {
             >
               notion.so/my-integrations
             </a>
+          </p>
+          <p>
+            • Pour Infomaniak OAuth, créez une application sur{' '}
+            <a
+              href="https://manager.infomaniak.com/v3/ng/products/cloud/ik-auth"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              Infomaniak Manager
+            </a>
+            {' '}avec l'URL de redirection: <code className="bg-gray-100 px-1 rounded">https://boom-new.boofactory.ch/api/auth/callback/infomaniak</code>
           </p>
           <p>
             • Le mot de passe administrateur sera automatiquement hashé avec bcrypt lors de la

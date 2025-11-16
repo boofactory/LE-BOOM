@@ -9,24 +9,25 @@
 3. Remplir les informations:
    - **Nom**: "BOOM v2"
    - **Description**: "Application de gestion d'événements BooFactory"
-   - **URL de redirection**: `https://boom.boofactory.ch/api/auth/callback/infomaniak`
+   - **URL de redirection**: `https://boom-new.boofactory.ch/api/auth/callback/infomaniak`
      - Pour dev local: `http://localhost:3000/api/auth/callback/infomaniak`
 4. Récupérer:
    - **Client ID** (ID de l'application)
    - **Client Secret** (Secret de l'application)
 
-### 2. Configurer les variables d'environnement
+### 2. Configurer via l'interface admin
 
-Ajouter dans `.env.local` (ou `.env.production` pour prod):
+1. Se connecter à BOOM avec le compte admin local
+2. Aller dans **Paramètres** (Settings) depuis le dashboard
+3. Configurer les 3 champs Infomaniak :
+   - **INFOMANIAK_CLIENT_ID** : Coller le Client ID obtenu à l'étape 1
+   - **INFOMANIAK_CLIENT_SECRET** : Coller le Client Secret obtenu à l'étape 1
+   - **INFOMANIAK_ENABLED** : Mettre `true` pour activer le SSO
 
-```bash
-# Infomaniak OAuth
-INFOMANIAK_CLIENT_ID=votre_client_id
-INFOMANIAK_CLIENT_SECRET=votre_client_secret
-NEXT_PUBLIC_INFOMANIAK_ENABLED=true
-```
+> **Note** : Les credentials sont stockés dans la base de données PostgreSQL (table `settings`).
+> Aucune variable d'environnement n'est nécessaire.
 
-### 3. Configuration NextAuth
+### 3. Configuration NextAuth (déjà faite)
 
 Le provider Infomaniak est déjà configuré dans `src/lib/auth.ts`:
 - **Authorization endpoint**: `https://login.infomaniak.com/authorize`
@@ -34,28 +35,31 @@ Le provider Infomaniak est déjà configuré dans `src/lib/auth.ts`:
 - **UserInfo endpoint**: `https://login.infomaniak.com/oauth2/userinfo`
 - **Scopes**: `openid email profile`
 
-### 4. Redémarrer l'application
+### 4. Redémarrer l'application (si déjà démarrée)
 
 ```bash
 # Development
 npm run dev
 
 # Production (Docker)
-# Rebuild and restart the container
+# Redémarrer le conteneur via Portainer ou Docker CLI
 ```
+
+> **Note** : La configuration est chargée au démarrage de l'application depuis la base de données.
+> Toute modification des settings Infomaniak nécessite un redémarrage.
 
 ## Utilisation
 
 ### Page de connexion
 
-Quand `NEXT_PUBLIC_INFOMANIAK_ENABLED=true`, un bouton "Se connecter avec Infomaniak" s'affiche sur la page `/login`.
+Quand `INFOMANIAK_ENABLED=true` dans les settings, un bouton "Se connecter avec Infomaniak" s'affiche automatiquement sur la page `/login`.
 
 ### Flow d'authentification
 
 1. **Utilisateur clique sur "Se connecter avec Infomaniak"**
 2. **Redirection vers Infomaniak**: `https://login.infomaniak.com/authorize`
 3. **Utilisateur s'authentifie** sur Infomaniak avec ses identifiants
-4. **Infomaniak redirige** vers `https://boom.boofactory.ch/api/auth/callback/infomaniak`
+4. **Infomaniak redirige** vers `https://boom-new.boofactory.ch/api/auth/callback/infomaniak`
 5. **NextAuth récupère** le code d'autorisation et échange contre un access token
 6. **NextAuth récupère** les informations utilisateur (email, nom, profil)
 7. **Session créée** et utilisateur redirigé vers `/dashboard`
@@ -75,8 +79,8 @@ Depuis Infomaniak, on récupère:
 ### HTTPS obligatoire
 
 L'OAuth2 nécessite HTTPS en production. Les URLs de redirection doivent être:
-- ✅ `https://boom.boofactory.ch/api/auth/callback/infomaniak`
-- ❌ `http://boom.boofactory.ch/api/auth/callback/infomaniak` (non sécurisé)
+- ✅ `https://boom-new.boofactory.ch/api/auth/callback/infomaniak`
+- ❌ `http://boom-new.boofactory.ch/api/auth/callback/infomaniak` (non sécurisé)
 
 Exception: `http://localhost:3000` est autorisé pour le développement.
 
@@ -84,9 +88,10 @@ Exception: `http://localhost:3000` est autorisé pour le développement.
 
 ⚠️ **Ne jamais commiter le Client Secret** dans le code source !
 
-Le Client Secret doit être:
-- Stocké dans `.env.local` (ignoré par git)
-- Configuré dans les variables d'environnement Docker/Portainer en production
+Le Client Secret est:
+- Stocké de manière sécurisée dans la base de données PostgreSQL (table `settings`)
+- Marqué comme `encrypted: true` dans le système
+- Masqué dans l'interface admin (affiché comme `********`)
 - Considéré comme un mot de passe
 
 ### Scopes
@@ -105,16 +110,17 @@ Les scopes demandés sont:
 **Solution**:
 1. Vérifier l'URL dans Infomaniak Manager
 2. S'assurer qu'elle correspond exactement (avec https://, sans trailing slash)
-3. Format attendu: `https://boom.boofactory.ch/api/auth/callback/infomaniak`
+3. Format attendu: `https://boom-new.boofactory.ch/api/auth/callback/infomaniak`
 
 ### Erreur "invalid_client"
 
 **Cause**: Client ID ou Client Secret incorrect.
 
 **Solution**:
-1. Vérifier les variables d'environnement
+1. Vérifier les valeurs dans les Paramètres de l'application
 2. Régénérer le Client Secret si nécessaire sur Infomaniak Manager
-3. Redémarrer l'application après modification
+3. Mettre à jour les settings dans BOOM
+4. Redémarrer l'application Docker/conteneur
 
 ### Utilisateur non créé automatiquement
 

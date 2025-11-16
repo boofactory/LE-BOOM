@@ -65,8 +65,23 @@ Desktop.ini
 app/public/uploads/*
 !app/public/uploads/.gitkeep
 
-# Claude Code credentials (NEVER commit!)
+# Claude Code credentials and temp files (NEVER commit!)
 .claude/credentials.md
 .claude/infomaniak-credentials.md
+.claude/notion-queries.md
+.claude/portainer-redeploy.md
 .claude/*.json
 .claude/*.txt
+
+# Analysis and debug scripts (temp files)
+wait-for-build.sh
+analyze-*.js
+find-*.js
+*-event.json
+*-events.json
+containers.json
+exec-*.json
+notion-*.json
+query-*.json
+stack-*.json
+analyse-*.txt
