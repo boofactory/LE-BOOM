@@ -142,16 +142,28 @@ export async function buildAuthOptions(): Promise<NextAuthOptions> {
             // Si l'utilisateur n'existe pas, le créer
             if (!dbUser) {
               console.log('[AUTH] Creating new user from Infomaniak:', user.email);
+
+              // Générer un username unique
+              const baseUsername = user.email.split('@')[0];
+              let username = baseUsername;
+              let counter = 1;
+
+              // Vérifier si le username existe déjà et ajouter un suffixe si nécessaire
+              while (await prisma.user.findUnique({ where: { username } })) {
+                username = `${baseUsername}${counter}`;
+                counter++;
+              }
+
               dbUser = await prisma.user.create({
                 data: {
                   email: user.email,
-                  name: user.name || user.email.split('@')[0],
-                  username: user.email.split('@')[0], // Générer username depuis email
+                  name: user.name || baseUsername,
+                  username,
                   role: 'USER', // Role par défaut
                   // Pas de password car auth OAuth
                 },
               });
-              console.log('[AUTH] User created successfully:', dbUser.id);
+              console.log('[AUTH] User created successfully:', dbUser.id, 'username:', username);
             } else {
               console.log('[AUTH] Existing user found:', dbUser.id);
             }
