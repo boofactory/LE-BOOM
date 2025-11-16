@@ -143,16 +143,10 @@ export async function buildAuthOptions(): Promise<NextAuthOptions> {
             if (!dbUser) {
               console.log('[AUTH] Creating new user from Infomaniak:', user.email);
 
-              // Générer un username unique
+              // Générer un username unique avec timestamp
               const baseUsername = user.email.split('@')[0];
-              let username = baseUsername;
-              let counter = 1;
-
-              // Vérifier si le username existe déjà et ajouter un suffixe si nécessaire
-              while (await prisma.user.findUnique({ where: { username } })) {
-                username = `${baseUsername}${counter}`;
-                counter++;
-              }
+              const timestamp = Date.now().toString().slice(-4);
+              const username = `${baseUsername}_${timestamp}`;
 
               dbUser = await prisma.user.create({
                 data: {
