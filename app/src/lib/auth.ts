@@ -25,6 +25,7 @@ function InfomaniakProvider(options: { clientId: string; clientSecret: string })
     name: "Infomaniak",
     type: "oauth",
     wellKnown: undefined,
+    issuer: "https://login.infomaniak.com",
     authorization: {
       url: "https://login.infomaniak.com/authorize",
       params: {
@@ -34,6 +35,7 @@ function InfomaniakProvider(options: { clientId: string; clientSecret: string })
     },
     token: "https://login.infomaniak.com/token",
     userinfo: "https://login.infomaniak.com/oauth2/userinfo",
+    checks: ["state"],
     profile(profile) {
       return {
         id: profile.sub,
