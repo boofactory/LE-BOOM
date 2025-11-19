@@ -23,7 +23,7 @@ function InfomaniakProvider(options: { clientId: string; clientSecret: string })
   return {
     id: "infomaniak",
     name: "Infomaniak",
-    type: "oidc",
+    type: "oauth",
     wellKnown: "https://login.infomaniak.com/.well-known/openid-configuration",
     authorization: {
       params: {
