@@ -70,8 +70,12 @@ app/public/uploads/*
 .claude/infomaniak-credentials.md
 .claude/notion-queries.md
 .claude/portainer-redeploy.md
+.claude/stack-recreation-complete.md
 .claude/*.json
 .claude/*.txt
+
+# Deployment configs with real credentials
+deployment/.env.production
 
 # Analysis and debug scripts (temp files)
 wait-for-build.sh
