@@ -41,6 +41,37 @@ function buildRedisUrl() {
   return `redis://:${encodedPassword}@redis:6379`;
 }
 
+async function runMigrations() {
+  console.log('🔄 Checking database migrations...');
+
+  const { execSync } = require('child_process');
+
+  try {
+    // Check if tables exist by trying a simple query
+    const prisma = new PrismaClient();
+    await prisma.$queryRaw`SELECT 1 FROM settings LIMIT 1`;
+    await prisma.$disconnect();
+
+    console.log('✅ Database already migrated\n');
+    return true;
+  } catch (error) {
+    // Tables don't exist, run migrations
+    console.log('⚠️  Tables not found, running migrations...');
+
+    try {
+      execSync('npx prisma migrate deploy', {
+        stdio: 'inherit',
+        env: process.env,
+      });
+      console.log('✅ Migrations completed successfully\n');
+      return true;
+    } catch (migrationError) {
+      console.error('❌ Migration failed:', migrationError.message);
+      return false;
+    }
+  }
+}
+
 async function initializeEnvironment() {
   console.log('🚀 LE BOOM - Pre-start initialization...\n');
 
@@ -51,7 +82,14 @@ async function initializeEnvironment() {
   console.log('✅ DATABASE_URL configured');
   console.log('✅ REDIS_URL configured\n');
 
-  // Step 2: Load or generate NEXTAUTH_SECRET
+  // Step 2: Run migrations if database is empty
+  const migrationsSuccess = await runMigrations();
+  if (!migrationsSuccess) {
+    console.error('❌ Cannot start application without database migrations');
+    process.exit(1);
+  }
+
+  // Step 3: Load or generate NEXTAUTH_SECRET
   console.log('🔐 Loading NEXTAUTH_SECRET...');
 
   let prisma;
