@@ -71,16 +71,16 @@ COPY --from=builder /app/next.config.js ./
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./package.json
 
+# Copy production node_modules (includes prisma CLI and all its dependencies)
+COPY --from=deps /app/node_modules ./node_modules
+
 # Copy built assets
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy Prisma schema, migrations, and generated client
+# Copy Prisma schema, migrations, and generated client (overwrite client from deps with generated one)
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/node_modules/.bin ./node_modules/.bin
 
 # Copy prestart script
 COPY --from=builder --chown=nextjs:nodejs /app/prestart.js ./prestart.js
