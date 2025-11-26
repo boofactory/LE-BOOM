@@ -173,6 +173,24 @@ export default function SettingsPage() {
         </p>
       </div>
 
+      {/* Admin Section - User Management Link */}
+      <div className="card mb-6 bg-gradient-to-br from-brand-coral-light to-brand-green-light border-2 border-brand-coral">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-brand-dark mb-1">👥 Gestion des utilisateurs</h2>
+            <p className="text-sm text-neutral-700">
+              Gérez les accès, activez les comptes et assignez les rôles
+            </p>
+          </div>
+          <a
+            href="/dashboard/settings/users"
+            className="btn-primary whitespace-nowrap"
+          >
+            Gérer les utilisateurs
+          </a>
+        </div>
+      </div>
+
       {message && (
         <div
           className={`mb-6 p-4 rounded-lg ${

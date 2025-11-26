@@ -142,6 +142,9 @@ model User {
   // Rôles
   role UserRole @default(VIEWER)
 
+  // Activation account (pour OAuth users)
+  active Boolean @default(false)
+
   // Session management (NextAuth)
   sessions Session[]
   accounts Account[]

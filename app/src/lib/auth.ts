@@ -122,31 +122,80 @@ export async function buildAuthOptions(): Promise<NextAuthOptions> {
       signIn: '/login',
     },
     callbacks: {
-      async signIn({ user, account }) {
-        // Local auth always allowed
+      async signIn({ user, account, profile }) {
+        // 1. Credentials auth: vérifier active
         if (account?.provider === 'credentials') {
-          return true;
-        }
-
-        // OAuth: verify user exists in DB
-        if (account?.provider === 'infomaniak' && user.email) {
           try {
             const dbUser = await prisma.user.findUnique({
+              where: { username: user.email || '' },
+              select: { active: true },
+            });
+
+            if (!dbUser?.active) {
+              console.log('[AUTH] Credentials user not active:', user.email);
+              return '/auth/error?error=AccountNotActive';
+            }
+
+            return true;
+          } catch (error) {
+            console.error('[AUTH] Error checking credentials user:', error);
+            return '/auth/error?error=DatabaseError';
+          }
+        }
+
+        // 2. Infomaniak OAuth flow
+        if (account?.provider === 'infomaniak' && user.email) {
+          try {
+            // 2.1 Email domain validation
+            if (!user.email.endsWith('@boofactory.ch')) {
+              console.log('[AUTH] Invalid email domain:', user.email);
+              return '/auth/error?error=InvalidDomain';
+            }
+
+            // 2.2 Check if user exists
+            let dbUser = await prisma.user.findUnique({
               where: { email: user.email },
             });
 
+            // 2.3 Auto-create user if first login
             if (!dbUser) {
-              console.log('[AUTH] OAuth user not found in DB:', user.email);
-              return false;
+              console.log('[AUTH] Creating new Infomaniak user:', user.email);
+
+              dbUser = await prisma.user.create({
+                data: {
+                  email: user.email,
+                  name: user.name || user.email.split('@')[0],
+                  infomaniakId: profile?.sub || (user as any).id,
+                  role: 'VIEWER',
+                  active: false,
+                },
+              });
+
+              console.log('[AUTH] New user created, awaiting activation:', dbUser.email);
+              return '/auth/error?error=AwaitingActivation';
             }
 
-            // Load role from DB
+            // 2.4 Check if existing user is active
+            if (!dbUser.active) {
+              console.log('[AUTH] User exists but not active:', dbUser.email);
+              return '/auth/error?error=AccountNotActive';
+            }
+
+            // 2.5 Update infomaniakId if missing
+            if (!dbUser.infomaniakId && profile?.sub) {
+              await prisma.user.update({
+                where: { id: dbUser.id },
+                data: { infomaniakId: profile.sub },
+              });
+            }
+
+            // 2.6 Load role for session
             (user as any).role = dbUser.role.toLowerCase();
             console.log('[AUTH] OAuth user verified:', dbUser.email, 'role:', dbUser.role);
             return true;
           } catch (error) {
-            console.error('[AUTH] Error in signIn callback:', error);
-            return false;
+            console.error('[AUTH] Error in OAuth signIn callback:', error);
+            return '/auth/error?error=DatabaseError';
           }
         }
 
