@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 interface Setting {
   id: number;
@@ -182,12 +183,12 @@ export default function SettingsPage() {
               Gérez les accès, activez les comptes et assignez les rôles
             </p>
           </div>
-          <a
+          <Link
             href="/dashboard/settings/users"
             className="btn-primary whitespace-nowrap"
           >
             Gérer les utilisateurs
-          </a>
+          </Link>
         </div>
       </div>
 

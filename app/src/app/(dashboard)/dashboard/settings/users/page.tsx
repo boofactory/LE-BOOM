@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 type User = {
   id: number;
@@ -130,7 +131,7 @@ export default function UsersManagementPage() {
     <div className="p-6 space-y-6">
       {/* Back Navigation */}
       <div>
-        <a
+        <Link
           href="/dashboard/settings"
           className="inline-flex items-center text-sm text-brand-coral hover:text-brand-coral-dark transition-colors mb-4"
         >
@@ -138,7 +139,7 @@ export default function UsersManagementPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Retour aux paramètres
-        </a>
+        </Link>
       </div>
 
       {/* Header */}
