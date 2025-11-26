@@ -10,7 +10,7 @@ import { successResponse, errorResponse, unauthorizedResponse } from '@/lib/resp
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -25,7 +25,8 @@ export async function PATCH(
       return errorResponse('Forbidden: Admin access required', 403);
     }
 
-    const userId = parseInt(params.id);
+    const { id } = await params;
+    const userId = parseInt(id);
     if (isNaN(userId)) {
       return errorResponse('Invalid user ID', 400);
     }
