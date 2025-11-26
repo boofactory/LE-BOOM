@@ -96,6 +96,12 @@ export async function buildAuthOptions(): Promise<NextAuthOptions> {
           return null;
         }
 
+        // Check if user is active
+        if (!user.active) {
+          console.log('[AUTH] User not active:', credentials.username);
+          return null;
+        }
+
         console.log('[AUTH] Login successful for:', credentials.username);
 
         // Return user object
@@ -123,27 +129,9 @@ export async function buildAuthOptions(): Promise<NextAuthOptions> {
     },
     callbacks: {
       async signIn({ user, account, profile }) {
-        // 1. Credentials auth: vérifier active
-        if (account?.provider === 'credentials') {
-          try {
-            const dbUser = await prisma.user.findUnique({
-              where: { username: user.email || '' },
-              select: { active: true },
-            });
+        // Credentials auth: active check is done in authorize() function
 
-            if (!dbUser?.active) {
-              console.log('[AUTH] Credentials user not active:', user.email);
-              return '/auth/error?error=AccountNotActive';
-            }
-
-            return true;
-          } catch (error) {
-            console.error('[AUTH] Error checking credentials user:', error);
-            return '/auth/error?error=DatabaseError';
-          }
-        }
-
-        // 2. Infomaniak OAuth flow
+        // Infomaniak OAuth flow
         if (account?.provider === 'infomaniak' && user.email) {
           try {
             // 2.1 Email domain validation
@@ -267,6 +255,12 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
 
+          // Check if user is active
+          if (!user.active) {
+            console.log('[AUTH] User not active:', credentials.username);
+            return null;
+          }
+
           console.log('[AUTH] Login successful for:', credentials.username);
 
           return {
@@ -291,27 +285,9 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async signIn({ user, account, profile }) {
-      // 1. Credentials auth: vérifier active
-      if (account?.provider === 'credentials') {
-        try {
-          const dbUser = await prisma.user.findUnique({
-            where: { username: user.email || '' },
-            select: { active: true },
-          });
+      // Credentials auth: active check is done in authorize() function
 
-          if (!dbUser?.active) {
-            console.log('[AUTH] Credentials user not active:', user.email);
-            return '/auth/error?error=AccountNotActive';
-          }
-
-          return true;
-        } catch (error) {
-          console.error('[AUTH] Error checking credentials user:', error);
-          return '/auth/error?error=DatabaseError';
-        }
-      }
-
-      // 2. Infomaniak OAuth flow
+      // Infomaniak OAuth flow
       if (account?.provider === 'infomaniak' && user.email) {
         try {
           // 2.1 Email domain validation
